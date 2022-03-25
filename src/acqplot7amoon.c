@@ -70,7 +70,8 @@ int main(int argc, char *argv[]) {
   unsigned int kk, v24;  // for speedy sscanf
   double avpwr, avpwr2, avpwrt, pwr, tcal, tload, p0, p1, p2, rms, rmss, secs, delaystart, secsst;
   double f, rmstheory, pkpwr, adcov, padcov, gal, gha, dgha, ghav, ghamax, ghamin, avsec, orbpwr, orbpwr2, sweep, maxsweep, mxsweep;
-  double avpkpwr, a, b, ppercent, lst, ha, ra, dec, az, el, lat, lon, sunlim, moonlim, tav, tr, tempr, wscalemax, wscalemin, max, min, av, d150, dload, dloadmax, minpwr, maxrmsf, rrmsf;
+  double avpkpwr, a, b, ppercent, lst, ha, ra, dec, az, el, lat, lon, sunlim, moonlim, tav, tr, tempr, wscalemax, wscalemin, max, min, av, d150,
+      dload, dloadmax, minpwr, maxrmsf, rrmsf;
   double a00, a01, a10, a11, b0, b1, d, aa00, aa10, aa01, aa11, n0, n1, n2, maxp0, minp0, avp0, np0, mel, maxfm, fmpwr;
   FILE *file1;
   char *p;
@@ -131,123 +132,45 @@ int main(int argc, char *argv[]) {
   if (argc > 1) sscanf(argv[1], "%s", fname);
   for (i = 0; i < argc; i++) {
     sscanf(argv[i], "%79s", buf);
-    if (strstr(buf, "-mode")) {
-      sscanf(argv[i + 1], "%d", &mode);
-    }
-    if (strstr(buf, "-fmode")) {
-      sscanf(argv[i + 1], "%d", &fmode);
-    }
-    if (strstr(buf, "-scaledb")) {
-      sscanf(argv[i + 1], "%lf", &scaledb);
-    }
-    if (strstr(buf, "-wscalemax")) {
-      sscanf(argv[i + 1], "%lf", &wscalemax);
-    }
-    if (strstr(buf, "-wscalemin")) {
-      sscanf(argv[i + 1], "%lf", &wscalemin);
-    }
-    if (strstr(buf, "-tstart")) {
-      sscanf(argv[i + 1], "%d", &tstart);
-    }
-    if (strstr(buf, "-tstop")) {
-      sscanf(argv[i + 1], "%d", &tstop);
-    }
-    if (strstr(buf, "-pfit")) {
-      sscanf(argv[i + 1], "%d", &pfit);
-    }
-    if (strstr(buf, "-ns")) {
-      sscanf(argv[i + 1], "%d", &ns);
-    }
-    if (strstr(buf, "-nn")) {
-      sscanf(argv[i + 1], "%d", &nn);
-    }
-    if (strstr(buf, "-d150")) {
-      sscanf(argv[i + 1], "%lf", &d150);
-    }
-    if (strstr(buf, "-dloadmax")) {
-      sscanf(argv[i + 1], "%lf", &dloadmax);
-    }
-    if (strstr(buf, "-smooth")) {
-      sscanf(argv[i + 1], "%d", &smooth);
-    }
-    if (strstr(buf, "-day")) {
-      sscanf(argv[i + 1], "%d", &day);
-    }
-    if (strstr(buf, "-gal")) {
-      sscanf(argv[i + 1], "%lf", &gal);
-    }
-    if (strstr(buf, "-gha")) {
-      sscanf(argv[i + 1], "%lf", &gha);
-    }
-    if (strstr(buf, "-dgha")) {
-      sscanf(argv[i + 1], "%lf", &dgha);
-    }
-    if (strstr(buf, "-nstart")) {
-      sscanf(argv[i + 1], "%d", &nstart);
-    }
-    if (strstr(buf, "-tcal")) {
-      sscanf(argv[i + 1], "%lf", &tcal);
-    }
-    if (strstr(buf, "-fstart")) {
-      sscanf(argv[i + 1], "%lf", &freqstart);
-    }
-    if (strstr(buf, "-fstop")) {
-      sscanf(argv[i + 1], "%lf", &freqstop);
-    }
-    if (strstr(buf, "-peakpwr")) {
-      sscanf(argv[i + 1], "%lf", &peakpwr);
-    }
-    if (strstr(buf, "-minpwr")) {
-      sscanf(argv[i + 1], "%lf", &minpwr);
-    }
-    if (strstr(buf, "-pkpwrm")) {
-      sscanf(argv[i + 1], "%lf", &pkpwrm);
-    }
-    if (strstr(buf, "-sunlim")) {
-      sscanf(argv[i + 1], "%lf", &sunlim);
-    }
-    if (strstr(buf, "-moonlim")) {
-      sscanf(argv[i + 1], "%lf", &moonlim);
-    }
-    if (strstr(buf, "-trec")) {
-      trec = 1;
-    }
-    if (strstr(buf, "-water")) {
-      sscanf(argv[i + 1], "%d", &water);
-    }
-    if (strstr(buf, "-nrfi")) {
-      sscanf(argv[i + 1], "%d", &nrfi);
-    }
-    if (strstr(buf, "-recom")) {
-      sscanf(argv[i + 1], "%d", &recom);
-    }
-    if (strstr(buf, "-adcov")) {
-      sscanf(argv[i + 1], "%lf", &padcov);
-    }
-    if (strstr(buf, "-maxscale")) {
-      sscanf(argv[i + 1], "%lf", &maxscale);
-    }
-    if (strstr(buf, "-minscale")) {
-      sscanf(argv[i + 1], "%lf", &minscale);
-    }
-    if (strstr(buf, "-mxsweep")) {
-      sscanf(argv[i + 1], "%lf", &mxsweep);
-    }
-    if (strstr(buf, "-maxrmsf")) {
-      sscanf(argv[i + 1], "%lf", &maxrmsf);
-    }
-    if (strstr(buf, "-maxfm")) {
-      sscanf(argv[i + 1], "%lf", &maxfm);
-    }
-    if (strstr(buf, "-delaystart")) {
-      sscanf(argv[i + 1], "%lf", &delaystart);
-    }
-    if (strstr(buf, "-wwd")) {
-      wwd = 1;
-    }
-    if (strstr(buf, "-rfi")) {
-      sscanf(argv[i + 1], "%lf", &rfi);
-    }
+    if (strstr(buf, "-mode")) { sscanf(argv[i + 1], "%d", &mode); }
+    if (strstr(buf, "-fmode")) { sscanf(argv[i + 1], "%d", &fmode); }
+    if (strstr(buf, "-scaledb")) { sscanf(argv[i + 1], "%lf", &scaledb); }
+    if (strstr(buf, "-wscalemax")) { sscanf(argv[i + 1], "%lf", &wscalemax); }
+    if (strstr(buf, "-wscalemin")) { sscanf(argv[i + 1], "%lf", &wscalemin); }
+    if (strstr(buf, "-tstart")) { sscanf(argv[i + 1], "%d", &tstart); }
+    if (strstr(buf, "-tstop")) { sscanf(argv[i + 1], "%d", &tstop); }
+    if (strstr(buf, "-pfit")) { sscanf(argv[i + 1], "%d", &pfit); }
+    if (strstr(buf, "-ns")) { sscanf(argv[i + 1], "%d", &ns); }
+    if (strstr(buf, "-nn")) { sscanf(argv[i + 1], "%d", &nn); }
+    if (strstr(buf, "-d150")) { sscanf(argv[i + 1], "%lf", &d150); }
+    if (strstr(buf, "-dloadmax")) { sscanf(argv[i + 1], "%lf", &dloadmax); }
+    if (strstr(buf, "-smooth")) { sscanf(argv[i + 1], "%d", &smooth); }
+    if (strstr(buf, "-day")) { sscanf(argv[i + 1], "%d", &day); }
+    if (strstr(buf, "-gal")) { sscanf(argv[i + 1], "%lf", &gal); }
+    if (strstr(buf, "-gha")) { sscanf(argv[i + 1], "%lf", &gha); }
+    if (strstr(buf, "-dgha")) { sscanf(argv[i + 1], "%lf", &dgha); }
+    if (strstr(buf, "-nstart")) { sscanf(argv[i + 1], "%d", &nstart); }
+    if (strstr(buf, "-tcal")) { sscanf(argv[i + 1], "%lf", &tcal); }
+    if (strstr(buf, "-fstart")) { sscanf(argv[i + 1], "%lf", &freqstart); }
+    if (strstr(buf, "-fstop")) { sscanf(argv[i + 1], "%lf", &freqstop); }
+    if (strstr(buf, "-peakpwr")) { sscanf(argv[i + 1], "%lf", &peakpwr); }
+    if (strstr(buf, "-minpwr")) { sscanf(argv[i + 1], "%lf", &minpwr); }
+    if (strstr(buf, "-pkpwrm")) { sscanf(argv[i + 1], "%lf", &pkpwrm); }
+    if (strstr(buf, "-sunlim")) { sscanf(argv[i + 1], "%lf", &sunlim); }
+    if (strstr(buf, "-moonlim")) { sscanf(argv[i + 1], "%lf", &moonlim); }
+    if (strstr(buf, "-trec")) { trec = 1; }
+    if (strstr(buf, "-water")) { sscanf(argv[i + 1], "%d", &water); }
+    if (strstr(buf, "-nrfi")) { sscanf(argv[i + 1], "%d", &nrfi); }
+    if (strstr(buf, "-recom")) { sscanf(argv[i + 1], "%d", &recom); }
+    if (strstr(buf, "-adcov")) { sscanf(argv[i + 1], "%lf", &padcov); }
+    if (strstr(buf, "-maxscale")) { sscanf(argv[i + 1], "%lf", &maxscale); }
+    if (strstr(buf, "-minscale")) { sscanf(argv[i + 1], "%lf", &minscale); }
+    if (strstr(buf, "-mxsweep")) { sscanf(argv[i + 1], "%lf", &mxsweep); }
+    if (strstr(buf, "-maxrmsf")) { sscanf(argv[i + 1], "%lf", &maxrmsf); }
+    if (strstr(buf, "-maxfm")) { sscanf(argv[i + 1], "%lf", &maxfm); }
+    if (strstr(buf, "-delaystart")) { sscanf(argv[i + 1], "%lf", &delaystart); }
+    if (strstr(buf, "-wwd")) { wwd = 1; }
+    if (strstr(buf, "-rfi")) { sscanf(argv[i + 1], "%lf", &rfi); }
   }
   //  if(water && smooth > 4) water = 2;
   for (i = 0; i < 100000; i++) {
@@ -326,9 +249,11 @@ int main(int argc, char *argv[]) {
       if (lst < 0.0) lst += 24.0;
       printf("%4d:%03d:%02d:%02d:%02d %5.2f ", yr, dy, hr, mn, sc, lst);
       j = 0;
-      if ((dy == day || day == 0) && (gal == 0 || (gal > 0.0 && fabs(ha) < gal) || (gal < 0.0 && fabs(ha) >= 6.0)) && (fabs(gha - ha) < dgha || fabs(gha - ha - 24.0) < dgha || gha > 1e3) &&
-          (nstart == -1 || (nstart <= line && nstart > 0)) && (nstart != -999) && el < sunlim && ((mel < moonlim && moonlim < 0) || (mel > moonlim && moonlim > 0) || !moonlim) &&
-          (secs - secsst > delaystart) && adcov < padcov && strlen(buf) > 131000 && ((hr >= tstart && hr <= tstop) || (tstart > tstop && (hr <= tstop || hr >= tstart)))) {
+      if ((dy == day || day == 0) && (gal == 0 || (gal > 0.0 && fabs(ha) < gal) || (gal < 0.0 && fabs(ha) >= 6.0)) &&
+          (fabs(gha - ha) < dgha || fabs(gha - ha - 24.0) < dgha || gha > 1e3) && (nstart == -1 || (nstart <= line && nstart > 0)) &&
+          (nstart != -999) && el < sunlim && ((mel < moonlim && moonlim < 0) || (mel > moonlim && moonlim > 0) || !moonlim) &&
+          (secs - secsst > delaystart) && adcov < padcov && strlen(buf) > 131000 &&
+          ((hr >= tstart && hr <= tstop) || (tstart > tstop && (hr <= tstop || hr >= tstart)))) {
         p = buf;
         p = strstr(p, "spectrum");
         if (*p && p) p = strchr(p, ' ');
@@ -393,9 +318,7 @@ int main(int argc, char *argv[]) {
           avpwrt += 50.0 * pow(10.0, 0.1 * pwr);
           j++;
         }
-        if (swpos == 0) {
-          ppercent = 100.0 * avpwr2 / avpwrt;
-        }
+        if (swpos == 0) { ppercent = 100.0 * avpwr2 / avpwrt; }
         if (swpos == 2 && (pp0 == line - 2) && (pp1 == line - 1)) {
           pp0 = pp1 = 0;
 
@@ -468,9 +391,7 @@ int main(int argc, char *argv[]) {
             rms = 0;
             av = av / a;
             for (i = 0; i < j; i++) {
-              if (fabs(fstart + i * fstep - 153.5) < 1.5) {
-                rms += (data[i] - av) * (data[i] - av);
-              }
+              if (fabs(fstart + i * fstep - 153.5) < 1.5) { rms += (data[i] - av) * (data[i] - av); }
             }
             av = b = 0;
             for (i = 0; i < j; i++) {
@@ -483,8 +404,8 @@ int main(int argc, char *argv[]) {
             if (d >= d150) printf("d150 %f %f\n", d, av / b);
           }
 
-          if ((ppercent < peakpwr && (ppercent > minpwr)) && ((pkpwr < pkpwrm) || (pkpwr > fabs(pkpwrm) && pkpwrm < 0)) && d <= d150 && dload < dloadmax && rrmsf < maxrmsf && fmpwr < maxfm &&
-              j == nspec) {
+          if ((ppercent < peakpwr && (ppercent > minpwr)) && ((pkpwr < pkpwrm) || (pkpwr > fabs(pkpwrm) && pkpwrm < 0)) && d <= d150 &&
+              dload < dloadmax && rrmsf < maxrmsf && fmpwr < maxfm && j == nspec) {
             wttt = 1;
             if (ppercent > maxp0) maxp0 = ppercent;
             if (ppercent < minp0) minp0 = ppercent;
@@ -563,9 +484,7 @@ int main(int argc, char *argv[]) {
                 zwtp = zwt;
                 m = 0;
                 for (i = 0; i < j; i++) {
-                  if (wtt[i] == 0 && fstart + i * fstep > freqstart && fstart + i * fstep < freqstop) {
-                    m++;
-                  }
+                  if (wtt[i] == 0 && fstart + i * fstep > freqstart && fstart + i * fstep < freqstop) { m++; }
                 }
                 zwt = m;
                 printf("%d zwt %d\n", j, zwt);
@@ -618,10 +537,13 @@ int main(int argc, char *argv[]) {
           jj = 0;
         else
           jj = 1;
-        //        printf("line %4d t %d tot_pwr %6.3f sig_percnt %5.2f cyc_accepted %4d peak %3.0f dB ppmax %d adcov %3.1f swpos %d wttt %2.0f temp %5.1f orbpwr2 %5.1f rmsf%d %5.1f\n",
+        //        printf("line %4d t %d tot_pwr %6.3f sig_percnt %5.2f cyc_accepted %4d peak %3.0f dB ppmax %d adcov %3.1f swpos %d wttt %2.0f temp
+        //        %5.1f orbpwr2 %5.1f rmsf%d %5.1f\n",
         //                       line, temp, avpwrt,100.0*avpwr2/avpwrt,nline,pkpwr,ppmax,adcov,swpos,wttt,tempr,orbpwr2,jj,rrmsf);
-        printf("line %4d t %d tot_pwr %6.3f sig_percnt %5.2f cyc_accepted %4d peak %3.0f dB ppmax %d adcov %3.1f swpos %d wttt %2.0f temp %5.1f fmpwr %5.1f rmsf%d %5.1f\n", line, temp, avpwrt,
-               100.0 * avpwr2 / avpwrt, nline, pkpwr, ppmax, adcov, swpos, wttt, tempr, fmpwr, jj, rrmsf);
+        printf(
+            "line %4d t %d tot_pwr %6.3f sig_percnt %5.2f cyc_accepted %4d peak %3.0f dB ppmax %d adcov %3.1f swpos %d wttt %2.0f temp %5.1f fmpwr "
+            "%5.1f rmsf%d %5.1f\n",
+            line, temp, avpwrt, 100.0 * avpwr2 / avpwrt, nline, pkpwr, ppmax, adcov, swpos, wttt, tempr, fmpwr, jj, rrmsf);
         np = j;
       }
       if (j == 0) printf("\n");
@@ -681,9 +603,7 @@ int main(int argc, char *argv[]) {
       zwtp = zwt;
       m = 0;
       for (i = 0; i < np; i++) {
-        if (wtt[i] == 0 && fstart + i * fstep > freqstart && fstart + i * fstep < freqstop) {
-          m++;
-        }
+        if (wtt[i] == 0 && fstart + i * fstep > freqstart && fstart + i * fstep < freqstop) { m++; }
       }
       zwt = m;
       printf("%d zwt %d\n", np, zwt);
@@ -826,8 +746,8 @@ int main(int argc, char *argv[]) {
   secint = nline * (double)nblock * (double)nspec * 2.0 / 420.0e6;
   // more complete expresssion for noise
   // include windowing
-  printf("rmss %f theory %f np %d nline %d avpkpwr %f fracint %f fracfreq %f tav %f\n", rmss, rmstheory / (sqrt(resol * secint * 0.5)), np, nline, avpkpwr / nline, 3.0 * (line / 3.0 - nline) / line,
-         (double)zwt / nnp, tav);
+  printf("rmss %f theory %f np %d nline %d avpkpwr %f fracint %f fracfreq %f tav %f\n", rmss, rmstheory / (sqrt(resol * secint * 0.5)), np, nline,
+         avpkpwr / nline, 3.0 * (line / 3.0 - nline) / line, (double)zwt / nnp, tav);
   if (np > 0) {
     //            if(smooth) dsmooth(np,smooth,dataout,wtt);
     if (pfit)
@@ -930,9 +850,7 @@ void waterspec(int mode, int np, double data[], int dy, int hr, int mn, int sc, 
   j2 = np;
   for (j = j1; j < j2; j++) {
     dd = data[j];
-    if (dd > dmax) {
-      dmax = dd;
-    }
+    if (dd > dmax) { dmax = dd; }
     if (dd < dmin) dmin = dd;
   }
   //    printf("dmax %f dmin %f\n",dmax,dmin);
@@ -1095,7 +1013,8 @@ void waterspec(int mode, int np, double data[], int dy, int hr, int mn, int sc, 
     fprintf(filew, "%6.2f %6.2f moveto\n (%s) show\n", 350.0 + xoffset, 50.0, txt);
     sprintf(txt, "UT %02d to %02d", tstart, tstop);
     fprintf(filew, "%6.2f %6.2f moveto\n (%s) show\n", 80.0 + xoffset, 50.0, txt);
-    sprintf(txt, "fstart %3.0f fstop %3.0f pfit %d smooth %d resol %3.0f kHz rfi %3.1f nline %d secint %5.0f", freqstart, freqstop, pfit, smooth, resol * 1e-3, rfi, nline, secint);
+    sprintf(txt, "fstart %3.0f fstop %3.0f pfit %d smooth %d resol %3.0f kHz rfi %3.1f nline %d secint %5.0f", freqstart, freqstop, pfit, smooth,
+            resol * 1e-3, rfi, nline, secint);
     fprintf(filew, "%6.2f %6.2f moveto\n (%s) show\n", 0.0 + xoffset, 25.0, txt);
     now = time(NULL);
     fprintf(filew, "%d %d moveto\n (%s) show\n", 450, 35, ctime(&now));
@@ -1145,9 +1064,7 @@ void waterwrite(int mode, int np, double data[], int yr, int dy, int hr, int mn,
     }
     fprintf(filewr, "\n");
   }
-  if (mode == 2) {
-    fclose(filewr);
-  }
+  if (mode == 2) { fclose(filewr); }
 }
 
 void plotfspec(int np, double fstart, double data[], double wtt[], int water)
@@ -1179,9 +1096,7 @@ void plotfspec(int np, double fstart, double data[], double wtt[], int water)
   j2 = np;
   for (j = j1; j < j2; j++) {
     dd = data[j];
-    if (dd > dmax && wtt[j] > 0.0) {
-      dmax = dd;
-    }
+    if (dd > dmax && wtt[j] > 0.0) { dmax = dd; }
     if (dd < dmin && wtt[j] > 0.0) dmin = dd;
   }
   printf("dmax %f dmin %f\n", dmax, dmin);
@@ -1206,10 +1121,14 @@ void plotfspec(int np, double fstart, double data[], double wtt[], int water)
     dmin = minscale;
     scale = dmax - dmin;
   }
-  for (y = 0; y < 2; y++) fprintf(file, "newpath\n %6.2f %6.2f moveto\n %6.2f %6.2f lineto\n 0 0 0 sethsbcolor stroke\n", xoffset, y * 480 + yoffset, xoffset + 400.0, y * 480 + yoffset);
+  for (y = 0; y < 2; y++)
+    fprintf(file, "newpath\n %6.2f %6.2f moveto\n %6.2f %6.2f lineto\n 0 0 0 sethsbcolor stroke\n", xoffset, y * 480 + yoffset, xoffset + 400.0,
+            y * 480 + yoffset);
   fprintf(file, "newpath\n %6.2f %6.2f moveto\n %6.2f %6.2f lineto\n 0 0 0 sethsbcolor stroke\n", xoffset, yoffset, xoffset, 480.0 + yoffset);
-  fprintf(file, "newpath\n %6.2f %6.2f moveto\n %6.2f %6.2f lineto\n 0 0 0 sethsbcolor stroke\n", xoffset + 400.0, yoffset, xoffset + 400.0, 480.0 + yoffset);
-  fprintf(file, "newpath\n %6.2f %6.2f moveto\n %6.2f %6.2f lineto\n 0 0 0 sethsbcolor stroke\n", xoffset + 0.0, yoffset, xoffset + 0.0, 480.0 + yoffset);
+  fprintf(file, "newpath\n %6.2f %6.2f moveto\n %6.2f %6.2f lineto\n 0 0 0 sethsbcolor stroke\n", xoffset + 400.0, yoffset, xoffset + 400.0,
+          480.0 + yoffset);
+  fprintf(file, "newpath\n %6.2f %6.2f moveto\n %6.2f %6.2f lineto\n 0 0 0 sethsbcolor stroke\n", xoffset + 0.0, yoffset, xoffset + 0.0,
+          480.0 + yoffset);
   yp = 0;
   xp = 0;
   totpp = 0;
@@ -1217,9 +1136,7 @@ void plotfspec(int np, double fstart, double data[], double wtt[], int water)
   for (k = 0; k < np; k++) {
     h = s = b = 0;
     x = k * 400.0 / (double)np;
-    if (scale > 0.0) {
-      totpp = data[k];
-    }
+    if (scale > 0.0) { totpp = data[k]; }
     if (wtt[k] == 0.0) {
       h = 0.6;
       s = 1;
@@ -1240,18 +1157,26 @@ void plotfspec(int np, double fstart, double data[], double wtt[], int water)
     if (y > 480) y = 480;
     if (k == 0) yp = y;
     if (y != yp) {
-      if (kk) fprintf(file, "newpath\n %6.2f %6.2f moveto\n %6.2f %6.2f lineto\n %5.2f %5.2f %5.2f sethsbcolor stroke\n", xp + xoffset, yp + yoffset, x + xoffset, yp + yoffset, h, s, b);
+      if (kk)
+        fprintf(file, "newpath\n %6.2f %6.2f moveto\n %6.2f %6.2f lineto\n %5.2f %5.2f %5.2f sethsbcolor stroke\n", xp + xoffset, yp + yoffset,
+                x + xoffset, yp + yoffset, h, s, b);
       xp = x;
       if (y > yp) {
-        if (kk) fprintf(file, "newpath\n %6.2f %6.2f moveto\n %6.2f %6.2f lineto\n  %5.2f %5.2f %5.2f sethsbcolor stroke\n", x + xoffset, yp + yoffset, x + xoffset, y + yoffset, h, s, b);
+        if (kk)
+          fprintf(file, "newpath\n %6.2f %6.2f moveto\n %6.2f %6.2f lineto\n  %5.2f %5.2f %5.2f sethsbcolor stroke\n", x + xoffset, yp + yoffset,
+                  x + xoffset, y + yoffset, h, s, b);
       }
       if (yp > y) {
-        if (kk) fprintf(file, "newpath\n %6.2f %6.2f moveto\n %6.2f %6.2f lineto\n %5.2f %5.2f %5.2f sethsbcolor stroke\n", x + xoffset, y + yoffset, x + xoffset, yp + yoffset, h, s, b);
+        if (kk)
+          fprintf(file, "newpath\n %6.2f %6.2f moveto\n %6.2f %6.2f lineto\n %5.2f %5.2f %5.2f sethsbcolor stroke\n", x + xoffset, y + yoffset,
+                  x + xoffset, yp + yoffset, h, s, b);
       }
     }
     yp = y;
   }
-  if (kk) fprintf(file, "newpath\n %6.2f %6.2f moveto\n %6.2f %6.2f lineto\n 0 0 0 sethsbcolor stroke\n", xp + xoffset, yp + yoffset, 400.0 + xoffset, yp + yoffset);
+  if (kk)
+    fprintf(file, "newpath\n %6.2f %6.2f moveto\n %6.2f %6.2f lineto\n 0 0 0 sethsbcolor stroke\n", xp + xoffset, yp + yoffset, 400.0 + xoffset,
+            yp + yoffset);
   step = 20.0;
   if (fspan < 120.0) step = 10.0;
   if (fspan < 20.0) step = 2.0;
@@ -1261,7 +1186,8 @@ void plotfspec(int np, double fstart, double data[], double wtt[], int water)
   for (f = fstart; f <= fstart + fspan; f += step) {
     x = (f - fstart) * 400.0 / fspan;
     y = 0.0;
-    fprintf(file, "newpath\n %6.2f %6.2f moveto\n %6.2f %6.2f lineto\n 0 0 0 sethsbcolor stroke\n", x + xoffset, y + yoffset, x + xoffset, y - 10.0 + yoffset);
+    fprintf(file, "newpath\n %6.2f %6.2f moveto\n %6.2f %6.2f lineto\n 0 0 0 sethsbcolor stroke\n", x + xoffset, y + yoffset, x + xoffset,
+            y - 10.0 + yoffset);
     if (step == 10.0)
       sprintf(txt, "%5.1f", f);
     else
@@ -1272,7 +1198,8 @@ void plotfspec(int np, double fstart, double data[], double wtt[], int water)
     for (f = 0; f <= scaledb; f += 10) {
       x = 0;
       y = f * 480.0 / scaledb;
-      fprintf(file, "newpath\n %6.2f %6.2f moveto\n %6.2f %6.2f lineto\n 0 0 0 sethsbcolor stroke\n", x + xoffset, y + yoffset, x + xoffset + 5, y + yoffset);
+      fprintf(file, "newpath\n %6.2f %6.2f moveto\n %6.2f %6.2f lineto\n 0 0 0 sethsbcolor stroke\n", x + xoffset, y + yoffset, x + xoffset + 5,
+              y + yoffset);
       sprintf(txt, "%3.0f dB", dmin + f);
       fprintf(file, "%6.2f %6.2f moveto\n (%s) show\n", x + xoffset - 45.0, y + 1.0 + yoffset, txt);
     }
@@ -1280,7 +1207,8 @@ void plotfspec(int np, double fstart, double data[], double wtt[], int water)
     for (f = dmin; f < dmax; f += (dmax - dmin) * 0.1) {
       x = 0;
       y = (f - dmin) * 480.0 / (dmax - dmin);
-      fprintf(file, "newpath\n %6.2f %6.2f moveto\n %6.2f %6.2f lineto\n 0 0 0 sethsbcolor stroke\n", x + xoffset, y + yoffset, x + xoffset + 5, y + yoffset);
+      fprintf(file, "newpath\n %6.2f %6.2f moveto\n %6.2f %6.2f lineto\n 0 0 0 sethsbcolor stroke\n", x + xoffset, y + yoffset, x + xoffset + 5,
+              y + yoffset);
       if (dmax - dmin < 10.0) {
         if (dmin > 300)
           sprintf(txt, "%4.2fK", f);
@@ -1297,8 +1225,8 @@ void plotfspec(int np, double fstart, double data[], double wtt[], int water)
   fprintf(file, "%6.2f %6.2f moveto\n (%s) show\n", 350.0 + xoffset, 65.0, txt);
   sprintf(txt, "UT %02d to %02d", tstart, tstop);
   fprintf(file, "%6.2f %6.2f moveto\n (%s) show\n", 80.0 + xoffset, 65.0, txt);
-  sprintf(txt, "fstart %3.0f fstop %3.0f pfit %d smooth %d resol %3.0f kHz rfi %3.1f int %d %5.0f sec rms %5.3f", freqstart, freqstop, pfit, smooth, resol * 1e-3, rfi, nline, secint,
-          rmscalc(np, data, wtt));
+  sprintf(txt, "fstart %3.0f fstop %3.0f pfit %d smooth %d resol %3.0f kHz rfi %3.1f int %d %5.0f sec rms %5.3f", freqstart, freqstop, pfit, smooth,
+          resol * 1e-3, rfi, nline, secint, rmscalc(np, data, wtt));
   fprintf(file, "%6.2f %6.2f moveto\n (%s) show\n", 0.0 + xoffset, 50.0, txt);
   sprintf(txt, "peakpwr %5.3e pkpwrm %5.3e", peakpwr, pkpwrm);
   fprintf(file, "%6.2f %6.2f moveto\n (%s) show\n", 0.0 + xoffset, 35.0, txt);
@@ -1462,9 +1390,7 @@ double polyfit(int npoly, int nfreq, double ddata[], double mcalc[], double wtt[
   printf("maxtrix inv err %e\n", sqrt(max));
   for (i = 0; i < nfreq; i++) {
     re = 0.0;
-    for (j = 0; j < npoly; j++) {
-      re += bbrr[j] * fitfun(i, j, mode);
-    }
+    for (j = 0; j < npoly; j++) { re += bbrr[j] * fitfun(i, j, mode); }
     //        dd = pow(10.0,re);
     dd = re;
     dataout[i] = ddata[i] - dd;
@@ -1571,9 +1497,7 @@ void qrd(long double a[], int n, double b[]) {
   for (i = n - 2, pi = (n - 2); i >= 0; pi -= 1, i--) {
     for (j = n - 1; j > i; j--) {
       sum = 0.0;
-      for (k = i + 1, pk = pi + 1; k <= j; pk += 1, k++) {
-        sum += u[pi][k] * u[pk][j];
-      }
+      for (k = i + 1, pk = pi + 1; k <= j; pk += 1, k++) { sum += u[pi][k] * u[pk][j]; }
       u[pi][j] = -u[pi][i] * sum;
     }
   }
@@ -1755,7 +1679,8 @@ void b64init(int b64[]) {
   }
 }
 
-void specout(int np, double data[], double wtt[], char fname[], int nline, int yr, int day, int hr, int min, int sc, double gha, double dgha, double ghav, double ghamax, double ghamin)
+void specout(int np, double data[], double wtt[], char fname[], int nline, int yr, int day, int hr, int min, int sc, double gha, double dgha,
+             double ghav, double ghamax, double ghamin)
 // plot the spectrum
 {
   int j, k, m, jstep;
@@ -1800,8 +1725,8 @@ void specout(int np, double data[], double wtt[], char fname[], int nline, int y
   for (j = 0; j < np; j += jstep) {
     f = fstart + j * fstep;
     if (j == 0)
-      fprintf(file, "%12.6f %12.6f %4.0f %d // %s %04d:%03d:%02d:%02d:%02d %7.3f %7.3f %7.3f %7.3f %7.3f fmpwr %7.3f\n", f, data[j], wtt[j], nline, fname, yr, day, hr, min, sc, gha, dgha, ghav,
-              ghamax, ghamin, fmpwr);
+      fprintf(file, "%12.6f %12.6f %4.0f %d // %s %04d:%03d:%02d:%02d:%02d %7.3f %7.3f %7.3f %7.3f %7.3f fmpwr %7.3f\n", f, data[j], wtt[j], nline,
+              fname, yr, day, hr, min, sc, gha, dgha, ghav, ghamax, ghamin, fmpwr);
     else
       fprintf(file, "%12.6f %12.6f %4.0f\n", f, data[j], wtt[j]);
   }
