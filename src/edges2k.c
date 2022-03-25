@@ -29,10 +29,11 @@ double fitfun(int, int, int, double *);
 double wavemodel(complex double, complex double, double, double, double, double, double);
 double w3p(complex double, complex double, double, double, double, double, double, double);
 double w3pinv(complex double, complex double, double, double, double, double, double, double);
-void fittp(int, double *, complex double *, double *, int, double *, complex double *, int, double *, double *, long double *, double *, int, int, char *);
+void fittp(int, double *, complex double *, double *, int, double *, complex double *, int, double *, double *, long double *, double *, int, int,
+           char *);
 void plotvna(int, double *, complex double *, double *, int, double *, complex double *, double *, double *, int, double, double, int, char *);
-void wavefit(int, int, int, double *, double *, double *, complex double *, complex double *, double, double, double, double *, double *, double *, double *, double *, double *, long double *,
-             double *, double *);
+void wavefit(int, int, int, double *, double *, double *, complex double *, complex double *, double, double, double, double *, double *, double *,
+             double *, double *, double *, long double *, double *, double *);
 double loss(complex double, double);
 double lossmodel(double, complex double, int);
 double lossmodel2(double, complex double);
@@ -40,8 +41,10 @@ double rigloss(complex double, complex double, complex double, complex double);
 complex double cabl2(double, double, complex double, int, complex double *, complex double *, double);
 double antloss(double, double *, double *, long double *, double *, double, int);
 double lossinv(double, double, double);
-double beamcorr(double, int, double, double, double *, double *, long double *, double *, int, int, double *, double *, double *, int, double *, double, double, int, int);
-double beamcorr2(double, int, double, double, double *, double *, long double *, double *, int, int, double *, double *, double *, int, double *, double, double, int);
+double beamcorr(double, int, double, double, double *, double *, long double *, double *, int, int, double *, double *, double *, int, double *,
+                double, double, int, int);
+double beamcorr2(double, int, double, double, double *, double *, long double *, double *, int, int, double *, double *, double *, int, double *,
+                 double, double, int);
 double gst(double);
 void radec_azel(double, double, double, double *, double *);
 void radec_azel2(double, double, double, double, double, double *, double *);
@@ -60,26 +63,35 @@ int main(int argc, char *argv[]) {
   static double bbrr[NDATA], mcalc[NDATA * NFIT];
   static double freqant[NDATA], freqopen[NDATA], freqshort[NDATA], freqhot[NDATA], freqamb[NDATA], freqs11ant[NDATA];
   static double freqs11lna[NDATA], freqs11hot[NDATA], freqs11amb[NDATA], freqs11cab1[NDATA], freqs11cab2[NDATA], freqs11rig[NDATA];
-  static double wtant[NDATA], wtopen[NDATA], wtshort[NDATA], wthot[NDATA], wtamb[NDATA], wttant[NDATA], wttlna[NDATA], wtthot[NDATA], wttamb[NDATA], wttcab1[NDATA], wttcab2[NDATA], wttrig[NDATA];
-  static double spant[NDATA], spopen[NDATA], spshort[NDATA], sphot[NDATA], spamb[NDATA], data[NDATA], dataout[NDATA], dataout2[NDATA], fitf[NDATA * NFIT], md[NDATA], ltemp[NDATA];
+  static double wtant[NDATA], wtopen[NDATA], wtshort[NDATA], wthot[NDATA], wtamb[NDATA], wttant[NDATA], wttlna[NDATA], wtthot[NDATA], wttamb[NDATA],
+      wttcab1[NDATA], wttcab2[NDATA], wttrig[NDATA];
+  static double spant[NDATA], spopen[NDATA], spshort[NDATA], sphot[NDATA], spamb[NDATA], data[NDATA], dataout[NDATA], dataout2[NDATA],
+      fitf[NDATA * NFIT], md[NDATA], ltemp[NDATA];
   static double sspant[NDATA], sspopen[NDATA], ssphot[NDATA], sspamb[NDATA],
       wtemp[NDATA];  // temporary - to preserve original
   static double tlna0[NDATA], tlna1[NDATA], tlna2[NDATA], skymodel[NDATA], freqcal[NDATA];
-  static complex double s11ant[NDATA], s11lna[NDATA], s11hot[NDATA], s11amb[NDATA], s11cab1[NDATA], s11cab2[NDATA], s11rig[NDATA], s12rig[NDATA], s22rig[NDATA], T;
-  static complex double ss11ant[NDATA], ss11lna[NDATA], ss11hot[NDATA], ss11amb[NDATA], ss11cab[NDATA], ss11rig[NDATA], ss12rig[NDATA], ss22rig[NDATA], tmp[NDATA], tmpsm[NDATA];
+  static complex double s11ant[NDATA], s11lna[NDATA], s11hot[NDATA], s11amb[NDATA], s11cab1[NDATA], s11cab2[NDATA], s11rig[NDATA], s12rig[NDATA],
+      s22rig[NDATA], T;
+  static complex double ss11ant[NDATA], ss11lna[NDATA], ss11hot[NDATA], ss11amb[NDATA], ss11cab[NDATA], ss11rig[NDATA], ss12rig[NDATA],
+      ss22rig[NDATA], tmp[NDATA], tmpsm[NDATA];
   static double bb[NBEAM], bb2[NBEAM];
 
-  double freq, wt, re, re1, re2, re3, re4, re5, re6, re7, re8, re9, re10, re11, re12, re13, re14, im, im1, im2, im3, im4, im5, im6, im7, im8, im9, im10, im11, im12, im13, im14, bspac;
-  double tt, La, Lh, Lhh, rms, rms1, rms2, rms3, fstart, fstop, wfstart, wfstop, fcen, eorcen, eorwid, eoramp, atten, dlyrob, days, adb, ldb, gha, dgha, specin, freqr, antaz, dscale;
-  double spe_ind, spe_inderr, gamma, gammaerr, ion_abs, ion_em, ssun, sunind, ghav, ghamax, ghamin, ion, tau, noise, opn, fbstart, fbstop, lr, li, ar, ai;
-  double thot, tamb, tcold, tant, tload, tcab, s, sca, s1, s2, ofs, err1, lst, secs, aloss, delaylna, delayln, delaycorr, dbcorr, t150, delayant, tant2, freqref;
-  int i, j, k, kk, nant, nopen, nshort, nhot, namb, mode, ns11ant, ns11lna, ns11hot, ns11amb, ns11cab1, ns11cab2, ns11rig, nfit, nfit1, imp, db, nfit2, nfit3, nfit4, iter, mfit, cfit, wfit, skymode,
-      yr, dy, hr, mn, sc, smooth, cal, wtmode, lmode, cmb, nline, site, map;
-  int ncal, cons, binteg, nter, nocal, bfit, bfit2, mdd, skymod2, test, i1, i2, i3, i4, i5, i6, i7, yrh, dyh, hrh, mnh, sch, yrc, dyc, hrc, mnc, scc, yro, dyo, hro, mno, sco, yrs, dys, hrs, mns, scs,
-      low, sim, rr, lna_poly;
+  double freq, wt, re, re1, re2, re3, re4, re5, re6, re7, re8, re9, re10, re11, re12, re13, re14, im, im1, im2, im3, im4, im5, im6, im7, im8, im9,
+      im10, im11, im12, im13, im14, bspac;
+  double tt, La, Lh, Lhh, rms, rms1, rms2, rms3, fstart, fstop, wfstart, wfstop, fcen, eorcen, eorwid, eoramp, atten, dlyrob, days, adb, ldb, gha,
+      dgha, specin, freqr, antaz, dscale;
+  double spe_ind, spe_inderr, gamma, gammaerr, ion_abs, ion_em, ssun, sunind, ghav, ghamax, ghamin, ion, tau, noise, opn, fbstart, fbstop, lr, li, ar,
+      ai;
+  double thot, tamb, tcold, tant, tload, tcab, s, sca, s1, s2, ofs, err1, lst, secs, aloss, delaylna, delayln, delaycorr, dbcorr, t150, delayant,
+      tant2, freqref;
+  int i, j, k, kk, nant, nopen, nshort, nhot, namb, mode, ns11ant, ns11lna, ns11hot, ns11amb, ns11cab1, ns11cab2, ns11rig, nfit, nfit1, imp, db,
+      nfit2, nfit3, nfit4, iter, mfit, cfit, wfit, skymode, yr, dy, hr, mn, sc, smooth, cal, wtmode, lmode, cmb, nline, site, map;
+  int ncal, cons, binteg, nter, nocal, bfit, bfit2, mdd, skymod2, test, i1, i2, i3, i4, i5, i6, i7, yrh, dyh, hrh, mnh, sch, yrc, dyc, hrc, mnc, scc,
+      yro, dyo, hro, mno, sco, yrs, dys, hrs, mns, scs, low, sim, rr, lna_poly;
   static double tcal_sca[NDATA], tcal_ofs[NDATA], tcal_scasm[NDATA], tcal_ofssm[NDATA], wtcal[NDATA];
   FILE *file1;
-  char fname[256], buf[2048], title[256], hottitle[256], ambtitle[256], opentitle[256], shorttitle[256], datfile[256], ambfile[256], hotfile[256], openfile[256], shortfile[256], info[256];
+  char fname[256], buf[2048], title[256], hottitle[256], ambtitle[256], opentitle[256], shorttitle[256], datfile[256], ambfile[256], hotfile[256],
+      openfile[256], shortfile[256], info[256];
   char antfname[256], hotfname[256], ambfname[256], openfname[256], shortfname[256], rigfname[256], lnafname[256];
   mode = 0;
   nant = nopen = nshort = nhot = namb = ns11ant = ns11lna = ns11hot = ns11amb = ns11cab1 = ns11cab2 = ns11rig = 0;
@@ -99,7 +111,7 @@ int main(int argc, char *argv[]) {
   cal = 0;
   tcab = 0;
   atten = 0;
-  lna_poly=-1;
+  lna_poly = -1;
   Lhh = 1;
   wfstart = 50;
   wfstop = 200;
@@ -145,12 +157,8 @@ int main(int argc, char *argv[]) {
   sunind = 0.5;
   for (i = 0; i < argc - 1; i++) {
     sscanf(argv[i], "%79s", buf);
-    if (strstr(buf, "-fstart")) {
-      sscanf(argv[i + 1], "%lf", &fstart);
-    }  // need to be first is used
-    if (strstr(buf, "-fstop")) {
-      sscanf(argv[i + 1], "%lf", &fstop);
-    }  // need to be first if used
+    if (strstr(buf, "-fstart")) { sscanf(argv[i + 1], "%lf", &fstart); }  // need to be first is used
+    if (strstr(buf, "-fstop")) { sscanf(argv[i + 1], "%lf", &fstop); }    // need to be first if used
     if (strstr(buf, "-spant")) mode = 1;
     if (strstr(buf, "-spopen")) mode = 2;
     if (strstr(buf, "-spshort")) mode = 5;
@@ -181,192 +189,89 @@ int main(int argc, char *argv[]) {
                                                  // fit if freq spacing different
     if (strstr(buf, "-cals11_sm33")) mode = 33;  // more recent calibrations just using simulator 3
     if (strstr(buf, "-nocal")) nocal = 1;
-    if (strstr(buf, "-ydhms")) {
-      sscanf(argv[i + 1], "%d:%d:%d:%d:%d", &yr, &dy, &hr, &mn, &sc);
-    }
+    if (strstr(buf, "-ydhms")) { sscanf(argv[i + 1], "%d:%d:%d:%d:%d", &yr, &dy, &hr, &mn, &sc); }
     if (strstr(buf, "-skymode")) {
       sscanf(argv[i + 1], "%d", &skymode);
     }  // -1 = no beamcorrection 0 = beamcorrection 256 = use beamcorr as data +
        // 1,2,4,8,16,32,64,128 opts
-    if (strstr(buf, "-skymod2")) sscanf(argv[i + 1], "%d", &skymod2); // use for new slower beamcorrection using new Haslam map
-    if (strstr(buf, "-lmode")) sscanf(argv[i + 1], "%d", &lmode); // -1 = to use aloss 0=for hot load 2=hot+rigloss 1= balun + bean using
-       // interpolated antloss 5or6=lowband balun +conn
+    if (strstr(buf, "-skymod2")) sscanf(argv[i + 1], "%d",
+                                        &skymod2);  // use for new slower beamcorrection using new Haslam map
+    if (strstr(buf, "-lmode"))
+      sscanf(argv[i + 1], "%d", &lmode);  // -1 = to use aloss 0=for hot load
+                                          // 2=hot+rigloss 1= balun + bean using
+                                          // interpolated antloss 5or6=lowband balun +conn
     if (strstr(buf, "-wtmode")) {
       sscanf(argv[i + 1], "%d", &wtmode);
-    }  // sets weighting for fit and > 10 for  calibration 1 = normal zero wt
-       // outside wfstart & wfstop
-    if (strstr(buf, "-nfit1")) {
-      sscanf(argv[i + 1], "%d", &nfit1);
-    }  // fitting to calibration data in specal.txt  default=27
-    if (strstr(buf, "-nfit2")) {
-      sscanf(argv[i + 1], "%d", &nfit2);
-    }  // calibration fitting of s11 for hot,cold and cable  default=27
-    if (strstr(buf, "-nfit3")) {
-      sscanf(argv[i + 1], "%d", &nfit3);
-    }  // LNA s11 fitting default=27
-    if (strstr(buf, "-lna_poly")) {
-      sscanf(argv[i + 1], "%d", &lna_poly);
-    }  // LNA s11 fitting default=27
-    if (strstr(buf, "-nfit4")) {
-      sscanf(argv[i + 1], "%d", &nfit4);
-    }  // antenna s11 fitting default=37
-    if (strstr(buf, "-mfit")) {
-      sscanf(argv[i + 1], "%d", &mfit);
-    }  // num parameters in fit to spectrum
-    if (strstr(buf, "-wfit")) {
-      sscanf(argv[i + 1], "%d", &wfit);
-    }  // noisewave fitting default=4
-    if (strstr(buf, "-bfit")) {
-      sscanf(argv[i + 1], "%d", &bfit);
-    }  // optional fitting of beam data default = 0
-    if (strstr(buf, "-cfit")) {
-      sscanf(argv[i + 1], "%d", &cfit);
-    }  // final calibration fitting not used if specal.txt is used default=7
-    if (strstr(buf, "-smooth")) {
-      sscanf(argv[i + 1], "%d", &smooth);
-    }  // optional smoothing of antenna spectrum after fitting
-    if (strstr(buf, "-cons")) {
-      sscanf(argv[i + 1], "%d", &cons);
-    }  // optional fitting constaints
-    if (strstr(buf, "-aloss")) {
-      sscanf(argv[i + 1], "%lf", &aloss);
-    }  // alternate simple antenna loss needs lmode = -1 to activate
-    if (strstr(buf, "-atten")) {
-      sscanf(argv[i + 1], "%lf", &atten);
-    }  // attenuation between antenna and LNA
-    if (strstr(buf, "-adb")) {
-      sscanf(argv[i + 1], "%lf", &adb);
-    }  // correction to ant s11 in dB
-    if (strstr(buf, "-ldb")) {
-      sscanf(argv[i + 1], "%lf", &ldb);
-    }  // correction to lna s11 in dB
-    if (strstr(buf, "-lr")) {
-      sscanf(argv[i + 1], "%lf", &lr);
-    }  // correction to lna s11 in re,im
-    if (strstr(buf, "-li")) {
-      sscanf(argv[i + 1], "%lf", &li);
-    }  // correction to lna s11 in re,im
-    if (strstr(buf, "-ar")) {
-      sscanf(argv[i + 1], "%lf", &ar);
-    }  // correction to ant s11 in re,im
-    if (strstr(buf, "-ai")) {
-      sscanf(argv[i + 1], "%lf", &ai);
-    }  // correction to ant s11 in re,im
-    if (strstr(buf, "-opn")) {
-      sscanf(argv[i + 1], "%lf", &opn);
-    }  // correction to lna to open at VNA
-    if (strstr(buf, "-thot")) {
-      sscanf(argv[i + 1], "%lf", &thot);
-    }  // temperature of hot calibration load
-    if (strstr(buf, "-tcold")) {
-      sscanf(argv[i + 1], "%lf", &tcold);
-    }  // temperature of cold (normally room temperature) calibration load
+    }                                                                        // sets weighting for fit and > 10 for  calibration 1 = normal zero wt
+                                                                             // outside wfstart & wfstop
+    if (strstr(buf, "-nfit1")) { sscanf(argv[i + 1], "%d", &nfit1); }        // fitting to calibration data in specal.txt  default=27
+    if (strstr(buf, "-nfit2")) { sscanf(argv[i + 1], "%d", &nfit2); }        // calibration fitting of s11 for hot,cold and cable  default=27
+    if (strstr(buf, "-nfit3")) { sscanf(argv[i + 1], "%d", &nfit3); }        // LNA s11 fitting default=27
+    if (strstr(buf, "-lna_poly")) { sscanf(argv[i + 1], "%d", &lna_poly); }  // LNA s11 fitting default=27
+    if (strstr(buf, "-nfit4")) { sscanf(argv[i + 1], "%d", &nfit4); }        // antenna s11 fitting default=37
+    if (strstr(buf, "-mfit")) { sscanf(argv[i + 1], "%d", &mfit); }          // num parameters in fit to spectrum
+    if (strstr(buf, "-wfit")) { sscanf(argv[i + 1], "%d", &wfit); }          // noisewave fitting default=4
+    if (strstr(buf, "-bfit")) { sscanf(argv[i + 1], "%d", &bfit); }          // optional fitting of beam data default = 0
+    if (strstr(buf, "-cfit")) { sscanf(argv[i + 1], "%d", &cfit); }          // final calibration fitting not used if specal.txt is used default=7
+    if (strstr(buf, "-smooth")) { sscanf(argv[i + 1], "%d", &smooth); }      // optional smoothing of antenna spectrum after fitting
+    if (strstr(buf, "-cons")) { sscanf(argv[i + 1], "%d", &cons); }          // optional fitting constaints
+    if (strstr(buf, "-aloss")) { sscanf(argv[i + 1], "%lf", &aloss); }       // alternate simple antenna loss needs lmode = -1 to activate
+    if (strstr(buf, "-atten")) { sscanf(argv[i + 1], "%lf", &atten); }       // attenuation between antenna and LNA
+    if (strstr(buf, "-adb")) { sscanf(argv[i + 1], "%lf", &adb); }           // correction to ant s11 in dB
+    if (strstr(buf, "-ldb")) { sscanf(argv[i + 1], "%lf", &ldb); }           // correction to lna s11 in dB
+    if (strstr(buf, "-lr")) { sscanf(argv[i + 1], "%lf", &lr); }             // correction to lna s11 in re,im
+    if (strstr(buf, "-li")) { sscanf(argv[i + 1], "%lf", &li); }             // correction to lna s11 in re,im
+    if (strstr(buf, "-ar")) { sscanf(argv[i + 1], "%lf", &ar); }             // correction to ant s11 in re,im
+    if (strstr(buf, "-ai")) { sscanf(argv[i + 1], "%lf", &ai); }             // correction to ant s11 in re,im
+    if (strstr(buf, "-opn")) { sscanf(argv[i + 1], "%lf", &opn); }           // correction to lna to open at VNA
+    if (strstr(buf, "-thot")) { sscanf(argv[i + 1], "%lf", &thot); }         // temperature of hot calibration load
+    if (strstr(buf, "-tcold")) { sscanf(argv[i + 1], "%lf", &tcold); }       // temperature of cold (normally room temperature) calibration load
     if (strstr(buf, "-tcab")) {
       sscanf(argv[i + 1], "%lf", &tcab);
     }  // temperature of cable used for noise wave calibration get set to tcold
        // unless entered
     if (strstr(buf, "-tant")) {
       sscanf(argv[i + 1], "%lf", &tant);
-    }  // temperature of antenna used in loss calculation needed even when
-       // specal.txt is used
-    if (strstr(buf, "-wfstart")) {
-      sscanf(argv[i + 1], "%lf", &wfstart);
-    }  // start of weighted data default=50
-    if (strstr(buf, "-wfstop")) {
-      sscanf(argv[i + 1], "%lf", &wfstop);
-    }  // stop of weighted data default=200
-    if (strstr(buf, "-fbstart")) {
-      sscanf(argv[i + 1], "%lf", &fbstart);
-    }  // beamfit start
-    if (strstr(buf, "-fbstop")) {
-      sscanf(argv[i + 1], "%lf", &fbstop);
-    }  // beamfit stop
-    if (strstr(buf, "-delaylna")) {
-      sscanf(argv[i + 1], "%lf", &delaylna);
-    }  // adapter correction on LNA S11
-    if (strstr(buf, "-delayant")) {
-      sscanf(argv[i + 1], "%lf", &delayant);
-    }  // correction for antenna
-    if (strstr(buf, "-dlyrob")) {
-      sscanf(argv[i + 1], "%lf", &dlyrob);
-    }  // one-way delay in Roberts balun
-    if (strstr(buf, "-delaycorr")) {
-      sscanf(argv[i + 1], "%lf", &delaycorr);
-    }  // VNA corr
-    if (strstr(buf, "-dbcorr")) {
-      sscanf(argv[i + 1], "%lf", &dbcorr);
-    }  // VNA corr
+    }                                                                           // temperature of antenna used in loss calculation needed even when
+                                                                                // specal.txt is used
+    if (strstr(buf, "-wfstart")) { sscanf(argv[i + 1], "%lf", &wfstart); }      // start of weighted data default=50
+    if (strstr(buf, "-wfstop")) { sscanf(argv[i + 1], "%lf", &wfstop); }        // stop of weighted data default=200
+    if (strstr(buf, "-fbstart")) { sscanf(argv[i + 1], "%lf", &fbstart); }      // beamfit start
+    if (strstr(buf, "-fbstop")) { sscanf(argv[i + 1], "%lf", &fbstop); }        // beamfit stop
+    if (strstr(buf, "-delaylna")) { sscanf(argv[i + 1], "%lf", &delaylna); }    // adapter correction on LNA S11
+    if (strstr(buf, "-delayant")) { sscanf(argv[i + 1], "%lf", &delayant); }    // correction for antenna
+    if (strstr(buf, "-dlyrob")) { sscanf(argv[i + 1], "%lf", &dlyrob); }        // one-way delay in Roberts balun
+    if (strstr(buf, "-delaycorr")) { sscanf(argv[i + 1], "%lf", &delaycorr); }  // VNA corr
+    if (strstr(buf, "-dbcorr")) { sscanf(argv[i + 1], "%lf", &dbcorr); }        // VNA corr
     if (strstr(buf, "-Lh")) {
       sscanf(argv[i + 1], "%lf", &Lh);
-    }  // loss of hot load at 100 MHz uses tamb for loss calc Lh = -1 for hot
-       // load model Lh = -2 to use s12,s22
-    if (strstr(buf, "-eorcen")) {
-      sscanf(argv[i + 1], "%lf", &eorcen);
-    }  // eor model center freq 0=no EOR search forces different set of parms
-    if (strstr(buf, "-eorwid")) {
-      sscanf(argv[i + 1], "%lf", &eorwid);
-    }  // eor model FWHM width 0=no EOR search
-    if (strstr(buf, "-eoramp")) {
-      sscanf(argv[i + 1], "%lf", &eoramp);
-    }  // eor model FWHM width 0=no EOR search
-    if (strstr(buf, "-antaz")) {
-      sscanf(argv[i + 1], "%lf", &antaz);
-    }  // antenna azimuth
-    if (strstr(buf, "-dscale")) {
-      sscanf(argv[i + 1], "%lf", &dscale);
-    }  // fix plot scale
-    if (strstr(buf, "-specin")) {
-      sscanf(argv[i + 1], "%lf", &specin);
-    }  // assumed foreground spectral index
-    if (strstr(buf, "-sunind")) {
-      sscanf(argv[i + 1], "%lf", &sunind);
-    }  // assumed sun spectral index
-    if (strstr(buf, "-binteg")) {
-      sscanf(argv[i + 1], "%d", &binteg);
-    }  // beamcorrection time span is secs default 1
-    if (strstr(buf, "-mdd")) {
-      sscanf(argv[i + 1], "%d", &mdd);
-    }  // defalt=mdd=0 pow(f/150,-2.5+i)  mdd=1 for gamma etc.
-    if (strstr(buf, "-sim")) {
-      sscanf(argv[i + 1], "%d", &sim);
-    }  // simulate data
-    if (strstr(buf, "-test")) {
-      sscanf(argv[i + 1], "%d", &test);
-    }  // test = 1 use beamcorr as data
-    if (strstr(buf, "-cmb")) {
-      sscanf(argv[i + 1], "%d", &cmb);
-    }  // subtraction of cmb for spectral index and beam correction
-    if (strstr(buf, "-parm1")) {
-      sscanf(argv[i + 1], "%lf", &parm1);
-    }  // search for optimum values
-    if (strstr(buf, "-parm2")) {
-      sscanf(argv[i + 1], "%lf", &parm2);
-    }  // search for optimum values
-    if (strstr(buf, "-parm3")) {
-      sscanf(argv[i + 1], "%lf", &parm3);
-    }  // search for optimum values
-    if (strstr(buf, "-parm4")) {
-      sscanf(argv[i + 1], "%lf", &parm4);
-    }  // search for optimum values
-    if (strstr(buf, "-ion")) {
-      sscanf(argv[i + 1], "%lf", &ion);
-    }  // add ionosphere
-    if (strstr(buf, "-tau")) {
-      sscanf(argv[i + 1], "%lf", &tau);
-    }  // opacity
-    if (strstr(buf, "-noise")) {
-      sscanf(argv[i + 1], "%lf", &noise);
-    }  // add noise
+    }                                                                     // loss of hot load at 100 MHz uses tamb for loss calc Lh = -1 for hot
+                                                                          // load model Lh = -2 to use s12,s22
+    if (strstr(buf, "-eorcen")) { sscanf(argv[i + 1], "%lf", &eorcen); }  // eor model center freq 0=no EOR search forces different set of parms
+    if (strstr(buf, "-eorwid")) { sscanf(argv[i + 1], "%lf", &eorwid); }  // eor model FWHM width 0=no EOR search
+    if (strstr(buf, "-eoramp")) { sscanf(argv[i + 1], "%lf", &eoramp); }  // eor model FWHM width 0=no EOR search
+    if (strstr(buf, "-antaz")) { sscanf(argv[i + 1], "%lf", &antaz); }    // antenna azimuth
+    if (strstr(buf, "-dscale")) { sscanf(argv[i + 1], "%lf", &dscale); }  // fix plot scale
+    if (strstr(buf, "-specin")) { sscanf(argv[i + 1], "%lf", &specin); }  // assumed foreground spectral index
+    if (strstr(buf, "-sunind")) { sscanf(argv[i + 1], "%lf", &sunind); }  // assumed sun spectral index
+    if (strstr(buf, "-binteg")) { sscanf(argv[i + 1], "%d", &binteg); }   // beamcorrection time span is secs default 1
+    if (strstr(buf, "-mdd")) { sscanf(argv[i + 1], "%d", &mdd); }         // defalt=mdd=0 pow(f/150,-2.5+i)  mdd=1 for gamma etc.
+    if (strstr(buf, "-sim")) { sscanf(argv[i + 1], "%d", &sim); }         // simulate data
+    if (strstr(buf, "-test")) { sscanf(argv[i + 1], "%d", &test); }       // test = 1 use beamcorr as data
+    if (strstr(buf, "-cmb")) { sscanf(argv[i + 1], "%d", &cmb); }         // subtraction of cmb for spectral index and beam correction
+    if (strstr(buf, "-parm1")) { sscanf(argv[i + 1], "%lf", &parm1); }    // search for optimum values
+    if (strstr(buf, "-parm2")) { sscanf(argv[i + 1], "%lf", &parm2); }    // search for optimum values
+    if (strstr(buf, "-parm3")) { sscanf(argv[i + 1], "%lf", &parm3); }    // search for optimum values
+    if (strstr(buf, "-parm4")) { sscanf(argv[i + 1], "%lf", &parm4); }    // search for optimum values
+    if (strstr(buf, "-ion")) { sscanf(argv[i + 1], "%lf", &ion); }        // add ionosphere
+    if (strstr(buf, "-tau")) { sscanf(argv[i + 1], "%lf", &tau); }        // opacity
+    if (strstr(buf, "-noise")) { sscanf(argv[i + 1], "%lf", &noise); }    // add noise
     if (strstr(buf, "-rr")) {
       sscanf(argv[i + 1], "%d", &rr);
       if (rr) srand(rr);
-    }  // srand
-    if (strstr(buf, "-site")) {
-      sscanf(argv[i + 1], "%d", &site);
-    }  // 0 = MRO 1 = Oregon
-    if (strstr(buf, "-map")) {
-      sscanf(argv[i + 1], "%d", &map);
-    }  // 0 = Haslam
+    }                                                                // srand
+    if (strstr(buf, "-site")) { sscanf(argv[i + 1], "%d", &site); }  // 0 = MRO 1 = Oregon
+    if (strstr(buf, "-map")) { sscanf(argv[i + 1], "%d", &map); }    // 0 = Haslam
     if (mode) {
       sscanf(argv[i + 1], "%s", fname);
       printf("Reading %s\n", fname);
@@ -380,19 +285,24 @@ int main(int argc, char *argv[]) {
         if (mode >= 1 && mode < 10) {
           sscanf(buf, "%lf %lf %lf", &freq, &tt, &wt);
           if (mode == 1 && j == 0) {
-            sscanf(buf, "%*s %*s %*s %d %*s %s %d:%d:%d:%d:%d %lf %lf %lf %lf %lf", &nline, datfile, &yr, &dy, &hr, &mn, &sc, &gha, &dgha, &ghav, &ghamax, &ghamin);
+            sscanf(buf, "%*s %*s %*s %d %*s %s %d:%d:%d:%d:%d %lf %lf %lf %lf %lf", &nline, datfile, &yr, &dy, &hr, &mn, &sc, &gha, &dgha, &ghav,
+                   &ghamax, &ghamin);
           }
           if (mode == 2 && j == 0) {
-            sscanf(buf, "%*s %*s %*s %*s %*s %s %d:%d:%d:%d:%d %lf %lf %lf %lf %lf", openfile, &yro, &dyo, &hro, &mno, &sco, &gha, &dgha, &ghav, &ghamax, &ghamin);
+            sscanf(buf, "%*s %*s %*s %*s %*s %s %d:%d:%d:%d:%d %lf %lf %lf %lf %lf", openfile, &yro, &dyo, &hro, &mno, &sco, &gha, &dgha, &ghav,
+                   &ghamax, &ghamin);
           }
           if (mode == 5 && j == 0) {
-            sscanf(buf, "%*s %*s %*s %*s %*s %s %d:%d:%d:%d:%d %lf %lf %lf %lf %lf", shortfile, &yrs, &dys, &hrs, &mns, &scs, &gha, &dgha, &ghav, &ghamax, &ghamin);
+            sscanf(buf, "%*s %*s %*s %*s %*s %s %d:%d:%d:%d:%d %lf %lf %lf %lf %lf", shortfile, &yrs, &dys, &hrs, &mns, &scs, &gha, &dgha, &ghav,
+                   &ghamax, &ghamin);
           }
           if (mode == 3 && j == 0) {
-            sscanf(buf, "%*s %*s %*s %*s %*s %s %d:%d:%d:%d:%d %lf %lf %lf %lf %lf", hotfile, &yrh, &dyh, &hrh, &mnh, &sch, &gha, &dgha, &ghav, &ghamax, &ghamin);
+            sscanf(buf, "%*s %*s %*s %*s %*s %s %d:%d:%d:%d:%d %lf %lf %lf %lf %lf", hotfile, &yrh, &dyh, &hrh, &mnh, &sch, &gha, &dgha, &ghav,
+                   &ghamax, &ghamin);
           }
           if (mode == 4 && j == 0) {
-            sscanf(buf, "%*s %*s %*s %*s %*s %s %d:%d:%d:%d:%d %lf %lf %lf %lf %lf", ambfile, &yrc, &dyc, &hrc, &mnc, &scc, &gha, &dgha, &ghav, &ghamax, &ghamin);
+            sscanf(buf, "%*s %*s %*s %*s %*s %s %d:%d:%d:%d:%d %lf %lf %lf %lf %lf", ambfile, &yrc, &dyc, &hrc, &mnc, &scc, &gha, &dgha, &ghav,
+                   &ghamax, &ghamin);
           }
           if (freq >= fstart && freq <= fstop) {
             if (mode == 1) {
@@ -494,14 +404,16 @@ int main(int argc, char *argv[]) {
           // imag(s22_semirigid),real(ant_sim1),imag(ant_sim1),real(ant_sim2),imag(ant_sim2)
           //
           // noise_source_s-parameters.txt
-          // # freq [MHz] re(noise_source_plus_3dB),im,re(noise_source_plus_3dB_plus_cable_box),im,re(s11_cable_box),im,re(s12s21_cable_box),im,re(s22_cable_box),im
+          // # freq [MHz]
+          // re(noise_source_plus_3dB),im,re(noise_source_plus_3dB_plus_cable_box),im,re(s11_cable_box),im,re(s12s21_cable_box),im,re(s22_cable_box),im
           //
           freq = 0;  // ensure freq is read
           if (buf[0] != '#') {
             sscanf(buf,
-                   "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf",
-                   &freq, &re, &im, &re1, &im1, &re2, &im2, &re3, &im3, &re4, &im4, &re5, &im5, &re6, &im6, &re7, &im7, &re8, &im8, &re9, &im9, &re10, &im10, &re11, &im11, &re12, &im12, &re13, &im13,
-                   &re14, &im14);
+                   "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf "
+                   "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf",
+                   &freq, &re, &im, &re1, &im1, &re2, &im2, &re3, &im3, &re4, &im4, &re5, &im5, &re6, &im6, &re7, &im7, &re8, &im8, &re9, &im9, &re10,
+                   &im10, &re11, &im11, &re12, &im12, &re13, &im13, &re14, &im14);
             if (freq >= fstart && freq <= fstop) {
               if (mode == 17) {  // don't overwrite other cals
                 T = re + im * I;
@@ -702,7 +614,8 @@ int main(int argc, char *argv[]) {
   //      for(j=0;j<ns11lna;j++) if(wtmode==0 && (freqs11lna[j] < wfstart ||
   //      freqs11lna[j] > wfstop)) wttlna[j]=0;
   for (j = 0; j < ns11lna; j++)
-    s11lna[j] = s11lna[j] * cexp(-2.0 * PI * freqs11lna[j] * 1e6 * ((delaylna + delaycorr) * I)) * pow(10.0, 0.05 * (dbcorr + ldb)) + lr + li * I;  // corrections for adapters
+    s11lna[j] = s11lna[j] * cexp(-2.0 * PI * freqs11lna[j] * 1e6 * ((delaylna + delaycorr) * I)) * pow(10.0, 0.05 * (dbcorr + ldb)) + lr +
+                li * I;  // corrections for adapters
   for (j = 0; j < ns11ant; j++) {
     if (opn)
       s11ant[j] = opn;
@@ -727,16 +640,23 @@ int main(int argc, char *argv[]) {
   fstart = freqamb[0];
   fstop = freqamb[namb - 1];
   fcen = (fstart + fstop) / 2.0;
-  if (skymode >= 0) bfit = beamcorr(0, bfit, antaz, secs, mcalc, fitf, aarr, bbrr, skymode, binteg, &lst, bb, &bspac, cmb, &freqref, fbstart, fbstop, site, map);  // fit polynomial
-  if (skymod2 >= 0) bfit = beamcorr2(0, bfit, antaz, secs, mcalc, fitf, aarr, bbrr, skymod2, binteg, &lst, bb, &bspac, cmb, &freqref, fbstart, fbstop,
-                                     site);                                                                                                                              // fit polynomial
-  if (skymod2 <= -128) bfit2 = beamcorr(0, bfit, antaz, secs, mcalc, fitf, aarr, bbrr, -skymod2, binteg, &lst, bb2, &bspac, cmb, &freqref, fbstart, fbstop, site, map);  // fit polynomial
+
+  if (skymode >= 0)
+    bfit = beamcorr(0, bfit, antaz, secs, mcalc, fitf, aarr, bbrr, skymode, binteg, &lst, bb, &bspac, cmb, &freqref, fbstart, fbstop, site,
+                    map);  // fit polynomial
+  if (skymod2 >= 0)
+    bfit = beamcorr2(0, bfit, antaz, secs, mcalc, fitf, aarr, bbrr, skymod2, binteg, &lst, bb, &bspac, cmb, &freqref, fbstart, fbstop,
+                     site);  // fit polynomial
+  if (skymod2 <= -128)
+    bfit2 = beamcorr(0, bfit, antaz, secs, mcalc, fitf, aarr, bbrr, -skymod2, binteg, &lst, bb2, &bspac, cmb, &freqref, fbstart, fbstop, site,
+                     map);  // fit polynomial
   if (skymode >= 0)
     sprintf(info, "lst %5.2f", lst);
   else
     sprintf(info, " ");
 
-  if (nant && (nopen || nshort) && nhot && namb && ns11ant && ns11lna && ns11hot && ns11amb && ns11cab1 && !nocal) {  // continue as all data is present
+  if (nant && (nopen || nshort) && nhot && namb && ns11ant && ns11lna && ns11hot && ns11amb && ns11cab1 &&
+      !nocal) {  // continue as all data is present
     //      L = pow(10.0,-0.1*atten);  // L not used if atten needed for cable
     //      use R factor method of memo 98
 
@@ -751,14 +671,14 @@ int main(int argc, char *argv[]) {
     printf("nant %d ns11ant %d ns11lna %d\n", nant, ns11ant,
            ns11lna);  // period under 100 MHz
     fittp(ns11lna, freqs11lna, s11lna, wttlna, namb, freqamb, ss11lna, nfit3, fitf, mcalc, aarr, bbrr, 1, lna_poly, lnafname);
-    fittp(ns11hot, freqs11hot, s11hot, wtthot, namb, freqhot, ss11hot, nfit2, fitf, mcalc, aarr, bbrr, 2, -1,hotfname);
-    fittp(ns11amb, freqs11amb, s11amb, wttamb, namb, freqamb, ss11amb, nfit2, fitf, mcalc, aarr, bbrr, 3, -1,ambfname);
-    if (nopen) fittp(ns11cab1, freqs11cab1, s11cab1, wttcab1, namb, freqamb, ss11cab, nfit2, fitf, mcalc, aarr, bbrr, 4, -1,openfname);
-    if (nshort) fittp(ns11cab2, freqs11cab2, s11cab2, wttcab2, namb, freqamb, &ss11cab[namb], nfit2, fitf, mcalc, aarr, bbrr, 5, -1,shortfname);
+    fittp(ns11hot, freqs11hot, s11hot, wtthot, namb, freqhot, ss11hot, nfit2, fitf, mcalc, aarr, bbrr, 2, -1, hotfname);
+    fittp(ns11amb, freqs11amb, s11amb, wttamb, namb, freqamb, ss11amb, nfit2, fitf, mcalc, aarr, bbrr, 3, -1, ambfname);
+    if (nopen) fittp(ns11cab1, freqs11cab1, s11cab1, wttcab1, namb, freqamb, ss11cab, nfit2, fitf, mcalc, aarr, bbrr, 4, -1, openfname);
+    if (nshort) fittp(ns11cab2, freqs11cab2, s11cab2, wttcab2, namb, freqamb, &ss11cab[namb], nfit2, fitf, mcalc, aarr, bbrr, 5, -1, shortfname);
     if (ns11rig) {
-      fittp(ns11rig, freqs11rig, s11rig, wttrig, namb, freqamb, ss11rig, nfit2, fitf, mcalc, aarr, bbrr, 7, -1,rigfname);
-      fittp(ns11rig, freqs11rig, s12rig, wttrig, namb, freqamb, ss12rig, nfit2, fitf, mcalc, aarr, bbrr, 8, -1,rigfname);
-      fittp(ns11rig, freqs11rig, s22rig, wttrig, namb, freqamb, ss22rig, nfit2, fitf, mcalc, aarr, bbrr, 9, -1,rigfname);
+      fittp(ns11rig, freqs11rig, s11rig, wttrig, namb, freqamb, ss11rig, nfit2, fitf, mcalc, aarr, bbrr, 7, -1, rigfname);
+      fittp(ns11rig, freqs11rig, s12rig, wttrig, namb, freqamb, ss12rig, nfit2, fitf, mcalc, aarr, bbrr, 8, -1, rigfname);
+      fittp(ns11rig, freqs11rig, s22rig, wttrig, namb, freqamb, ss22rig, nfit2, fitf, mcalc, aarr, bbrr, 9, -1, rigfname);
     }
     if (!nopen) {
       for (i = 0; i < namb; i++) {
@@ -841,7 +761,8 @@ int main(int argc, char *argv[]) {
               iter, freqhot[i], sca, s1, s, s2, tcold, thot, ofs, sca, tcal_ofs[i], tcal_sca[i], tlna0[i]);
       }
       //    for(i=0;i<namb;i++) Tll[i]=Tll2[i]=s11lna[i]; // test of fitting
-      wavefit(nopen, nshort, wfit, sspopen, wtcal, freqopen, ss11cab, ss11lna, tcab, tload, tamb, tlna0, tlna1, tlna2, dataout, mcalc, fitf, aarr, bbrr, &delayln);
+      wavefit(nopen, nshort, wfit, sspopen, wtcal, freqopen, ss11cab, ss11lna, tcab, tload, tamb, tlna0, tlna1, tlna2, dataout, mcalc, fitf, aarr,
+              bbrr, &delayln);
     }
 
     plotfspec(nopen + nshort, freqopen, sspopen, dataout, wtcal, dscale, 0, 3, openfile, shortfile, info);  // check on fit to open cable
@@ -872,8 +793,8 @@ int main(int argc, char *argv[]) {
     for (j = 0; j < cfit; j++) {
       for (i = 0; i < namb; i++) {
         fitf[i + j * namb] = pow((freqamb[i] / fcen),
-                                 0.5 * j);  // poly is best cfit 6 - removed Fourier series - add
-                                            // 0.5 may be better
+                                 0.5 * j);  // poly is best cfit 6 - removed Fourier
+                                            // series - add 0.5 may be better
       }
     }
 
@@ -925,13 +846,13 @@ int main(int argc, char *argv[]) {
     fittp(ncal, freqcal, tmp, wtcal, nant, freqant, tmpsm, nfit1, fitf, mcalc, aarr, bbrr, 6, -1, fname);
     for (i = 0; i < nant; i++) ss11lna[i] = tmpsm[i];
     for (i = 0; i < ncal; i++) tmp[i] = tcal_scasm[i] + tcal_ofssm[i] * I;
-    fittp(ncal, freqcal, tmp, wtcal, nant, freqant, tmpsm, nfit1, fitf, mcalc, aarr, bbrr, 6, -1,fname);
+    fittp(ncal, freqcal, tmp, wtcal, nant, freqant, tmpsm, nfit1, fitf, mcalc, aarr, bbrr, 6, -1, fname);
     for (i = 0; i < nant; i++) {
       tcal_scasm[i] = creal(tmpsm[i]);
       tcal_ofssm[i] = cimag(tmpsm[i]);
     }
     for (i = 0; i < ncal; i++) tmp[i] = tlna1[i] + tlna2[i] * I;
-    fittp(ncal, freqcal, tmp, wtcal, nant, freqant, tmpsm, nfit1, fitf, mcalc, aarr, bbrr, 6, -1,fname);
+    fittp(ncal, freqcal, tmp, wtcal, nant, freqant, tmpsm, nfit1, fitf, mcalc, aarr, bbrr, 6, -1, fname);
     for (i = 0; i < nant; i++) {
       tlna1[i] = creal(tmpsm[i]);
       tlna2[i] = cimag(tmpsm[i]);
@@ -989,22 +910,31 @@ int main(int argc, char *argv[]) {
       printf(
           "freqant %7.2f tlnau %7.2f tlnacc %7.2f tlnacs %7.2f tlnac %7.2f "
           "phase %7.2f tsky %7.2f md %7.2f loss %5.2f\n",
-          freqant[i], tlna0[i], tlna1[i], tlna2[i], sqrt(tlna1[i] * tlna1[i] + tlna2[i] * tlna2[i]), atan2(tlna2[i], tlna1[i]) * 180.0 / PI, dataout[i], md[i], (1.0 - La) * tant);
+          freqant[i], tlna0[i], tlna1[i], tlna2[i], sqrt(tlna1[i] * tlna1[i] + tlna2[i] * tlna2[i]), atan2(tlna2[i], tlna1[i]) * 180.0 / PI,
+          dataout[i], md[i], (1.0 - La) * tant);
     //        printf("loss %f dB La %f freq %f dataout %f md %f beamcr
     //        %f\n",loss,La,freqant[i],dataout[i],md[i],beamcr); beamcorr
     //        assumes a spectral index of -2.5
     if (test & 16 && skymod2 <= -128)
-      dataout[i] = beamcorr(freqant[i] * (1.0 + low), bfit2, antaz, secs, mcalc, fitf, aarr, bbrr, 0, 0, &lst, bb2, &bspac, cmb, &freqref, 0, 0, site, map) *
-                   pow(1.0 / (1.0 + low), -2.5);  // substitute  beamcorrection
+      dataout[i] =
+          beamcorr(freqant[i] * (1.0 + low), bfit2, antaz, secs, mcalc, fitf, aarr, bbrr, 0, 0, &lst, bb2, &bspac, cmb, &freqref, 0, 0, site, map) *
+          pow(1.0 / (1.0 + low), -2.5);  // substitute  beamcorrection
     if (skymode >= 0) {
-      skymodel[i] = beamcorr(freqant[i] * (1.0 + low), bfit, antaz, secs, mcalc, fitf, aarr, bbrr, 0, 0, &lst, bb, &bspac, cmb, &freqref, 0, 0, site, map) * pow(1.0 / (1.0 + low), -2.5);
+      skymodel[i] =
+          beamcorr(freqant[i] * (1.0 + low), bfit, antaz, secs, mcalc, fitf, aarr, bbrr, 0, 0, &lst, bb, &bspac, cmb, &freqref, 0, 0, site, map) *
+          pow(1.0 / (1.0 + low), -2.5);
       //                    dataout[i] = dataout[i] - (skymodel[i] -
       //                    beamcorr(150.0,bfit,antaz,secs,mcalc,fitf,aarr,bbrr,0,0,&sun,&lst,bb,bbsun)*pow(freqant[i]/150.0,-2.5));
-      dataout[i] = dataout[i] * beamcorr(freqref, bfit, antaz, secs, mcalc, fitf, aarr, bbrr, 0, 0, &lst, bb, &bspac, cmb, &freqref, 0, 0, site, map) * pow(freqant[i] / freqref, -2.5) / skymodel[i];
+      dataout[i] = dataout[i] *
+                   beamcorr(freqref, bfit, antaz, secs, mcalc, fitf, aarr, bbrr, 0, 0, &lst, bb, &bspac, cmb, &freqref, 0, 0, site, map) *
+                   pow(freqant[i] / freqref, -2.5) / skymodel[i];
     }
     if (skymod2 >= 0) {
-      skymodel[i] = beamcorr2(freqant[i] * (1.0 + low), bfit, antaz, secs, mcalc, fitf, aarr, bbrr, 0, 0, &lst, bb, &bspac, cmb, &freqref, 0, 0, site) * pow(1.0 / (1.0 + low), -2.5);
-      dataout[i] = dataout[i] * beamcorr2(freqref, bfit, antaz, secs, mcalc, fitf, aarr, bbrr, 0, 0, &lst, bb, &bspac, cmb, &freqref, 0, 0, site) * pow(freqant[i] / freqref, -2.5) / skymodel[i];
+      skymodel[i] =
+          beamcorr2(freqant[i] * (1.0 + low), bfit, antaz, secs, mcalc, fitf, aarr, bbrr, 0, 0, &lst, bb, &bspac, cmb, &freqref, 0, 0, site) *
+          pow(1.0 / (1.0 + low), -2.5);
+      dataout[i] = dataout[i] * beamcorr2(freqref, bfit, antaz, secs, mcalc, fitf, aarr, bbrr, 0, 0, &lst, bb, &bspac, cmb, &freqref, 0, 0, site) *
+                   pow(freqant[i] / freqref, -2.5) / skymodel[i];
     }
 
     if (test & 1 && (skymode >= 0 || skymod2 >= 0) && (skymode >= 256 || skymod2 >= 256)) dataout[i] = skymodel[i];  // substitute  beamcorrection
@@ -1012,8 +942,8 @@ int main(int argc, char *argv[]) {
                                           specin);  // test rms 14 mK at 2.55 1 mK at 2.51
     if (test == 4)
       dataout[i] = 300 * pow(freqant[i] / 150.0,
-                             -2.55 + 0.01 * log(freqant[i] / 150.0));  // test rms 14 mK at 2.55 1 mK
-                                                                       // at 2.51 gamma 0.01
+                             -2.55 + 0.01 * log(freqant[i] / 150.0));  // test rms 14 mK at 2.55 1
+                                                                       // mK at 2.51 gamma 0.01
     if (test == 6) {
       dataout[i] = 300 * pow(freqant[i] / 150.0,
                              -2.55 + 0.0 * log(freqant[i] / 150.0));  // gamma 0.0
@@ -1021,7 +951,11 @@ int main(int argc, char *argv[]) {
     }  // 0.1% ion at 1000K
     if (test & 8) {
       if (tau > 0)
-        dataout[i] += -eoramp * (1 - exp(-tau * exp(-(freqant[i] - eorcen) * (freqant[i] - eorcen) * (-log(-log((1 + exp(-tau)) / 2) / tau)) / (eorwid * eorwid * 0.25)))) / (1 - exp(-tau));
+        dataout[i] +=
+            -eoramp *
+            (1 -
+             exp(-tau * exp(-(freqant[i] - eorcen) * (freqant[i] - eorcen) * (-log(-log((1 + exp(-tau)) / 2) / tau)) / (eorwid * eorwid * 0.25)))) /
+            (1 - exp(-tau));
       else
         dataout[i] += -eoramp * exp(-0.69 * (freqant[i] - eorcen) * (freqant[i] - eorcen) / ((eorwid * eorwid + 1e-6) * 0.25));
       dataout[i] += dataout[i] * ion * (-1e-3 * pow(freqant[i] / 150.0, -2.0)) + ion * 1e3 * 1e-3 * pow(freqant[i] / 150.0, -2.0);
@@ -1033,7 +967,11 @@ int main(int argc, char *argv[]) {
       if (test & 1 && (skymode >= 0 || skymod2 >= 0) && (skymode >= 256 || skymod2 >= 256)) {
         tant2 = skymodel[i] + skymodel[i] * ion * (-1e-3 * pow(freqant[i] / 150.0, -2.0)) + ion * 1e3 * 1e-3 * pow(freqant[i] / 150.0, -2.0);
         if (tau > 0)
-          tant2 += -eoramp * (1 - exp(-tau * exp(-(freqant[i] - eorcen) * (freqant[i] - eorcen) * (-log(-log((1 + exp(-tau)) / 2) / tau)) / (eorwid * eorwid * 0.25)))) / (1 - exp(-tau));
+          tant2 +=
+              -eoramp *
+              (1 -
+               exp(-tau * exp(-(freqant[i] - eorcen) * (freqant[i] - eorcen) * (-log(-log((1 + exp(-tau)) / 2) / tau)) / (eorwid * eorwid * 0.25)))) /
+              (1 - exp(-tau));
         else
           tant2 += -eoramp * exp(-0.69 * (freqant[i] - eorcen) * (freqant[i] - eorcen) / ((eorwid * eorwid + 1e-6) * 0.25));
       } else
@@ -1043,7 +981,8 @@ int main(int argc, char *argv[]) {
       if (sim / 10) La = 1;  // no loss correction
       if (sim / 10 == 2) La = lossmodel(freqant[i], ss11ant[i], lmode);
       tant2 = La * tant2 + (1.0 - La) * tant;
-      data[i] = (w3p(ss11ant[i], ss11lna[i], tant2, tload, tamb, tlna0[i], tlna1[i], tlna2[i]) - tamb + tcal_ofssm[i]) / tcal_scasm[i] + tamb + noise * gauss();
+      data[i] = (w3p(ss11ant[i], ss11lna[i], tant2, tload, tamb, tlna0[i], tlna1[i], tlna2[i]) - tamb + tcal_ofssm[i]) / tcal_scasm[i] + tamb +
+                noise * gauss();
     }
     outsim(nant, freqant, data, yr, dy, hr, mn, sc);
   }
@@ -1067,13 +1006,17 @@ int main(int argc, char *argv[]) {
         if (eorcen == 0) {
           if (i == 0) fitf[k] = 1;  // constant
           if (i > 0 && (i % 2) == 1) {
-            fitf[k] = w3pinv(ss11ant[j], ss11lna[j], sspant[j], tload, tamb, tlna0[j], tlna1[j], tlna2[j])  // s11ant mag
-                      - w3pinv(ss11ant[j] * pow(10.0, -0.05 * 0.01 * pow(freq / fcen, (i / 2))), ss11lna[j], sspant[j], tload, tamb, tlna0[j], tlna1[j], tlna2[j]);
+            fitf[k] = w3pinv(ss11ant[j], ss11lna[j], sspant[j], tload, tamb, tlna0[j], tlna1[j],
+                             tlna2[j])  // s11ant mag
+                      - w3pinv(ss11ant[j] * pow(10.0, -0.05 * 0.01 * pow(freq / fcen, (i / 2))), ss11lna[j], sspant[j], tload, tamb, tlna0[j],
+                               tlna1[j], tlna2[j]);
           }
 
           if (i > 0 && (i % 2) == 0) {
-            fitf[k] = w3pinv(ss11ant[j], ss11lna[j], sspant[j], tload, tamb, tlna0[j], tlna1[j], tlna2[j])  // s11ant phase
-                      - w3pinv(ss11ant[j] * cexp(-(PI / 180.0) * pow(freq / fcen, (i / 2) - 1) * I), ss11lna[j], sspant[j], tload, tamb, tlna0[j], tlna1[j], tlna2[j]);
+            fitf[k] = w3pinv(ss11ant[j], ss11lna[j], sspant[j], tload, tamb, tlna0[j], tlna1[j],
+                             tlna2[j])  // s11ant phase
+                      - w3pinv(ss11ant[j] * cexp(-(PI / 180.0) * pow(freq / fcen, (i / 2) - 1) * I), ss11lna[j], sspant[j], tload, tamb, tlna0[j],
+                               tlna1[j], tlna2[j]);
           }
         } else {
           if (mdd == 1) {
@@ -1095,10 +1038,8 @@ int main(int argc, char *argv[]) {
           if (mdd == 5) {
             i3 = 1;
             i6 = 2;
-          }  // 3 terms sca,ion_abs,sun
-          if (mdd == 6) {
-            i6 = 1;
-          }  // 2 terms sca,sun
+          }                          // 3 terms sca,ion_abs,sun
+          if (mdd == 6) { i6 = 1; }  // 2 terms sca,sun
           if (mdd == 7) {
             i3 = 1;
             i4 = 2;
@@ -1169,6 +1110,7 @@ int main(int argc, char *argv[]) {
       }  // add back cmb
     if (kk == 0) err1 = sqrt(aarr[nfit - 1 + (nfit - 1) * nfit]);
   }
+
   if (smooth) {
     dsmooth(nant, dataout, dataout2, wtant, mcalc, fabs(smooth));
     if (smooth < 0) {
@@ -1205,12 +1147,14 @@ int main(int argc, char *argv[]) {
   if (eorcen > 100.0)
     days = aarr[i + i * nfit] * 1e2 * 300.0 * 300.0 / (20e-3 * 20e-3 * (freqant[1] - freqant[0]) * 1e6 * 3600.0 * 8.0 * 0.3 * 0.4 * 0.5);
   else
-    days = aarr[i + i * nfit] * 1700.0 * 1700.0 * 1e2 / (100e-3 * 100e-3 * (freqant[1] - freqant[0]) * 1e6 * 3600.0 * 8.0 * 0.3 * 0.4 * 0.5);  // 8hrs,3pos,40%eff,loadnoise
+    days = aarr[i + i * nfit] * 1700.0 * 1700.0 * 1e2 /
+           (100e-3 * 100e-3 * (freqant[1] - freqant[0]) * 1e6 * 3600.0 * 8.0 * 0.3 * 0.4 * 0.5);  // 8hrs,3pos,40%eff,loadnoise
   if (eorwid > 0.0)
     printf(
         "Summary mfit %d mdd %d rms %4.0f K rms1 %6.1f mK value %8.1f err "
         "%5.1f snr %3.0f days %3.0f gha %6.2f T%d %5.1f sqrtcov %5.1f\n",
-        mfit, mdd, rms, 1e3 * rms1, 1e3 * bbrr[i], sqrt(aarr[i + i * nfit]) / err1, bbrr[i] / (sqrt(aarr[i + i * nfit]) * rms2), days, gha, (int)freqr, t150, sqrt(aarr[i + i * nfit]));
+        mfit, mdd, rms, 1e3 * rms1, 1e3 * bbrr[i], sqrt(aarr[i + i * nfit]) / err1, bbrr[i] / (sqrt(aarr[i + i * nfit]) * rms2), days, gha,
+        (int)freqr, t150, sqrt(aarr[i + i * nfit]));
   else
     printf(
         "Summary mfit %d mdd %d rms %4.0f K rms1 %6.1f mK gha %6.2f T%d "
@@ -1242,8 +1186,9 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
-void wavefit(int nopen, int nshort, int wfit, double spopen[], double wtopen[], double freqopen[], complex double s11cab[], complex double s11lna[], double tcab, double tload, double tamb,
-             double tlna0[], double tlna1[], double tlna2[], double dataout[], double mcalc[], double fitf[], long double aarr[], double bbrr[], double *delay) {
+void wavefit(int nopen, int nshort, int wfit, double spopen[], double wtopen[], double freqopen[], complex double s11cab[], complex double s11lna[],
+             double tcab, double tload, double tamb, double tlna0[], double tlna1[], double tlna2[], double dataout[], double mcalc[], double fitf[],
+             long double aarr[], double bbrr[], double *delay) {
   int i, j, k, nfit, m, mopen, iter;
   double freq, tlnau, tlnacc, tlnacs, cc, cs, dly, min, bdly, rms, dl, dd;
   static double dataout2[NDATA];
@@ -1286,8 +1231,9 @@ void wavefit(int nopen, int nshort, int wfit, double spopen[], double wtopen[], 
           }
           cc = tlnacc * cos(2.0 * PI * freqopen[m] * dly) + tlnacs * sin(2.0 * PI * freqopen[m] * dly);
           cs = tlnacs * cos(2.0 * PI * freqopen[m] * dly) - tlnacc * sin(2.0 * PI * freqopen[m] * dly);
-          fitf[i + j * mopen] = w3p(s11cab[i], s11lna[m], tcab, tload, tamb, tlnau, cc, cs) - w3p(s11cab[i], s11lna[m], tcab, tload, tamb, 0, 0,
-                                                                                                  0);  // need to subract value for tlnau,tlnacc,tlnacs all zero
+          fitf[i + j * mopen] =
+              w3p(s11cab[i], s11lna[m], tcab, tload, tamb, tlnau, cc, cs) - w3p(s11cab[i], s11lna[m], tcab, tload, tamb, 0, 0,
+                                                                                0);  // need to subract value for tlnau,tlnacc,tlnacs all zero
           dataout[i] = spopen[i] - w3p(s11cab[i], s11lna[m], tcab, tload, tamb, 0, 0,
                                        0);  // need to subtract cable noise
         }
@@ -1322,11 +1268,11 @@ void wavefit(int nopen, int nshort, int wfit, double spopen[], double wtopen[], 
   }
 }
 
-void fittp(int np, double freqq2[], complex double s11[], double wtt[], int npout, double freqq1[], complex double Taa[], int nfit, double fitf[], double mcalc[], long double aarr[], double bbrr[],
-           int mode, int model, char *fname) {
+void fittp(int np, double freqq2[], complex double s11[], double wtt[], int npout, double freqq1[], complex double Taa[], int nfit, double fitf[],
+           double mcalc[], long double aarr[], double bbrr[], int mode, int model, char *fname) {
   /*
       2022-24-03 Steven Murray: Added the "model" parameter, which specifies either
-      
+
         < 0: continue to do what happened in Alan's original code (i.e. use Fourier
              when nfit > 16 and polynomial otherwise)
         0:   use Fourier
@@ -1343,9 +1289,7 @@ void fittp(int np, double freqq2[], complex double s11[], double wtt[], int npou
     max = -1e99;
     for (del = -1e-9; del <= 100e-9; del += 1e-10) {
       sumc = 0;
-      for (i = 0; i < np; i++) {
-        sumc += wtt[i] * s11[i] * cexp(2.0 * PI * freqq2[i] * 1e6 * del * I);
-      }
+      for (i = 0; i < np; i++) { sumc += wtt[i] * s11[i] * cexp(2.0 * PI * freqq2[i] * 1e6 * del * I); }
       if (cabs(sumc) > max) {
         max = cabs(sumc);
         delay = del;
@@ -1368,18 +1312,17 @@ void fittp(int np, double freqq2[], complex double s11[], double wtt[], int npou
   fcen = (freqq2[i2] + f0) * 0.5;  // fixed 25sep15 now O.K. to nfit4 = 10
   for (j = 0; j < nfit; j++) {
     for (i = 0; i < np; i++) {
-      if ((nfit > 16) | (model==0)) {  // changed 13dec17 to 14 7aug18 to 16 20aug18
+      if ((nfit > 16)  | (model == 0)) {  // changed 13dec17 to 14 7aug18 to 16 20aug18
         if (j == 0) fitf[i + j * np] = 1;
         if (j % 2) fitf[i + j * np] = cos((freqq2[i] - f0) * 2.0 * PI * (j / 2 + 1) / dfreq);
         if (j % 2 == 0 && j > 0) fitf[i + j * np] = sin((freqq2[i] - f0) * 2.0 * PI * (j / 2) / dfreq);
-      } else if ((model == 1) | (model < 0)) {
+      } else if ( (model == 1) | (model < 0)) {  //
         // log  helps a little  pow(log10(freqq2[i]/fcen),j);
-        fitf[i + j * np] = pow(log10(freqq2[i] / fcen), j);  
+        fitf[i + j * np] = pow(log10(freqq2[i] / fcen), j);
       } else {
         printf("model must be -1, 0 or 1\n");
         return;
       }
-        
     }
   }
   for (k = 0; k < 2; k++) {
@@ -1400,11 +1343,11 @@ void fittp(int np, double freqq2[], complex double s11[], double wtt[], int npou
       sum = 0;
       a = 0;
       for (j = 0; j < nfit; j++) {
-        if ((nfit > 16) | (model==0)) {
+        if ((nfit > 16) | (model == 0)) {  //  
           if (j == 0) a = 1;
           if (j % 2) a = cos((freqq1[i] - f0) * 2.0 * PI * (j / 2 + 1) / dfreq);
           if (j % 2 == 0 && j > 0) a = sin((freqq1[i] - f0) * 2.0 * PI * (j / 2) / dfreq);
-        } else if ((model == 1) | (model < 0)){
+        } else if ((model == 1) | (model < 0)) {                    // 
           a = pow(log10(freqq1[i] / fcen), j);  //
         } else {
           printf("model must be -1, 0 or 1\n");
@@ -1513,11 +1456,14 @@ double antloss(double freq, double mcalc[], double fitf[], long double aarr[], d
   //    -6.031950e+00,  2.307908e+00}; // for low3 3-terms double losk[] =
   //    {-1.179120134559797e+01,  8.816080087652101e+01, -2.263158238997412e+02,
   //    2.823787777684456e+02,  -1.647342754171209e+02,  3.580581311748211e+01};
-  double losk[] = {-1.345035060985746e+00, 2.240940678524730e+00, 7.902278433276813e+00, -5.318319232436456e+00};                          // loss_low3a_2e-2_rock.txt -nfit 4
-                                                                                                                                           // -fmin 52 -fmax 110
-  double losg5[] = {4.370180753656857e+02, -7.610893859849077e+02, 7.252089244174796e+02, -3.487898288054475e+02, 6.949783330081493e+01};  // ground loss
-  double losg7[] = {4.846670825246866e+02, -1.023102678080684e+03, 1.303906332843779e+03, -1.000317701465261e+03, 4.580417451841646e+02, -1.129872060290666e+02, 1.163765940857081e+01};  // ground loss
-  double losg8[] = {3.926509849561377e+00, -1.838394495633041e+01, 3.929777791337121e+01, -4.597706096084568e+01, 3.037985609919453e+01, -1.062848140609678e+01, 1.531802534710291e+00};  // mesh loss
+  double losk[] = {-1.345035060985746e+00, 2.240940678524730e+00, 7.902278433276813e+00, -5.318319232436456e+00};  // loss_low3a_2e-2_rock.txt -nfit 4
+                                                                                                                   // -fmin 52 -fmax 110
+  double losg5[] = {4.370180753656857e+02, -7.610893859849077e+02, 7.252089244174796e+02, -3.487898288054475e+02,
+                    6.949783330081493e+01};  // ground loss
+  double losg7[] = {4.846670825246866e+02, -1.023102678080684e+03, 1.303906332843779e+03, -1.000317701465261e+03,
+                    4.580417451841646e+02, -1.129872060290666e+02, 1.163765940857081e+01};  // ground loss
+  double losg8[] = {3.926509849561377e+00, -1.838394495633041e+01, 3.929777791337121e+01, -4.597706096084568e+01,
+                    3.037985609919453e+01, -1.062848140609678e+01, 1.531802534710291e+00};  // mesh loss
 
   if (mode == 1) {  // only use antloss for lmode = 1
     nfit = 7;
@@ -1644,7 +1590,6 @@ double lossmodel(double freq, complex double s11a, int mode) {
     cabl2(freq, del4, 0, 8, &s11, &s12, ttest);
     s21 = s12;
     s22 = s11;
-    printf("1stcall %f %f", creal(s11), cimag(s11));
   }  // SC3792
   else {
     cabl2(freq, del4, 0, 9, &s11, &s12, ttest);
@@ -1699,7 +1644,6 @@ double lossmodel(double freq, complex double s11a, int mode) {
     cabl2(freq, del, 0, 5, &s11, &s12, ttest2);
     s21 = s12;
     s22 = s11;
-    printf("1stcall %f %f", creal(s11), cimag(s21));
   }  // low band balun tube
   if (mode == 10 || mode == 11) {
     cabl2(freq, del, 0, 21, &s11, &s12, ttest2);
@@ -1722,7 +1666,6 @@ double lossmodel(double freq, complex double s11a, int mode) {
   s22 = -t21 / t22;
   T = (s11a - s11) / (s12 * s21 - s11 * s22 + s22 * s11a);  // from memo 132
   L2 = cabs(s12 * s21) * (1 - T * conj(T)) / ((1 - s11a * conj(s11a)) * (1 - s22 * T) * (1 - conj(s22 * T)));
-  printf("freq & L2 %f %f", freq, L2);
   //   T=cabl2(freq,del,T,5,&s11,&s12,1.0); T =
   //   cabl2(freq,del4,T,8,&s11,&s12,ttest); printf("check s11a %f %f  %f
   //   %f\n",creal(s11a),cimag(s11a),creal(T),cimag(T));
@@ -1918,14 +1861,15 @@ connector s2 = 5.96e07*0.024*ttest;   // for Stainless s1 = 5.96e07*0.05*ttest;
 
 double lossinv(double tant, double tamb, double L) { return (tant - tamb * (1 - L)) / L; }
 
-double beamcorr(double freq, int bfit, double ang, double secs, double mcalc[], double fitf[], long double aarr[], double bbrr[], int skymode, int integ, double *lst, double bb[], double *bspac,
-                int cmb, double *freqref, double fbstart, double fbstop, int site, int map) {
+double beamcorr(double freq, int bfit, double ang, double secs, double mcalc[], double fitf[], long double aarr[], double bbrr[], int skymode,
+                int integ, double *lst, double bb[], double *bspac, int cmb, double *freqref, double fbstart, double fbstop, int site, int map) {
   char name[255], buf[32768], *p;
   FILE *file3;
   static double azel[360 * 91 * NBEAM], data[NBEAM], data2[NBEAM], wt[NBEAM], fsum[NBEAM], fsum1[NBEAM], fsum2[NBEAM], poww[NBEAM], mapgal[512][1024];
   static double rraa[512][1024], sindec[512][1024], cosdec[512][1024];
   static double map45[512][1024], spind[512][1024];
-  double k, sum, amp, amp150, raa, dec, lat, lon, gstt, sunra, sundec, sunaz, sunel, glat, glon, wsum, azz, el, sang, mp, dp, gp, opac, telec, rms, wb, aind, wsum2;
+  double k, sum, amp, amp150, raa, dec, lat, lon, gstt, sunra, sundec, sunaz, sunel, glat, glon, wsum, azz, el, sang, mp, dp, gp, opac, telec, rms,
+      wb, aind, wsum2;
   double ssecs, fr, cmbb, av45, av408, nav;
   int i, j, n, nn, az, frq, frq150, iaz, iel, m, frqst, frqspac, nbeam, yr, dy, hr, mn, sc, ii, jj, iii, jjj;
   double cost, sint, zb, antght, d, max;
@@ -2010,15 +1954,13 @@ double beamcorr(double freq, int bfit, double ang, double secs, double mcalc[], 
     for (i = 0; i < 512; i++)
       for (j = 0; j < 1024; j++) mapgal[i][j] = -1;
     if (map == 0 || map == 2) {
-      if ((file3 = fopen("408-all-noh", "r")) == NULL) {
-        return 0;
-      }
+      if ((file3 = fopen("408-all-noh", "r")) == NULL) { return 0; }
     }  // map 0= use Haslam 1= use Guzman 2=Haslam + Guzman 3=Guzman + Haslam
+    printf("let's print this\n");
     if (map == 1 || map == 3) {
-      if ((file3 = fopen("/home/aeer/fits/45mhz.txt", "r")) == NULL) {
-        return 0;
-      }
+      if ((file3 = fopen("/home/aeer/fits/45mhz.txt", "r")) == NULL) { return 0; }
     }  // use Guzmin map
+    printf("let's print this 2\n");
     i = j = 0;
     while (fgets(buf, 32768, file3) != 0) {
       p = buf;
@@ -2034,8 +1976,10 @@ double beamcorr(double freq, int bfit, double ang, double secs, double mcalc[], 
             k = 2.3e6;
           else
             k = 18;
-        }                                                                                                               // simulate point source
-        if (cmb & 64) k = exp(-4.0 * log(2.0) * ((i - 256) * (i - 256) + (j - 512) * (j - 512)) / 810.0) * 2.6e3 + 18;  // 1 unit = 0.3516 deg 28 to simulate source 10 FWHM deg wide
+        }  // simulate point source
+        if (cmb & 64)
+          k = exp(-4.0 * log(2.0) * ((i - 256) * (i - 256) + (j - 512) * (j - 512)) / 810.0) * 2.6e3 +
+              18;  // 1 unit = 0.3516 deg 28 to simulate source 10 FWHM deg wide
         mapgal[i][j] = k;
         // printf("i %d j %d k %6.0f\n",i,j,k);
         j++;
@@ -2045,13 +1989,9 @@ double beamcorr(double freq, int bfit, double ang, double secs, double mcalc[], 
     fclose(file3);
     if (map >= 2) {
       if (map == 2)
-        if ((file3 = fopen("/home/aeer/fits/45mhz.txt", "r")) == NULL) {
-          return 0;
-        }
+        if ((file3 = fopen("/home/aeer/fits/45mhz.txt", "r")) == NULL) { return 0; }
       if (map == 3)
-        if ((file3 = fopen("408-all-noh", "r")) == NULL) {
-          return 0;
-        }
+        if ((file3 = fopen("408-all-noh", "r")) == NULL) { return 0; }
 
       i = j = 0;
 
@@ -2183,6 +2123,8 @@ double beamcorr(double freq, int bfit, double ang, double secs, double mcalc[], 
     nn = integ / 1800 + 1;  // averaging over 3600 sec makes little difference to result
                             //    nn = integ/900 + 1; // made a small difference
     d = (double)integ / (double)nn;
+
+    printf("Got here..\n");
     for (n = 0; n < nn; n++) {
       ssecs = secs + d / 2.0 + n * d - ((double)integ) / 2.0;
       sunradec(ssecs, &sunra, &sundec);
@@ -2266,17 +2208,24 @@ double beamcorr(double freq, int bfit, double ang, double secs, double mcalc[], 
                   if (fabs(glat) < 9.0)
                     wb = (cos(glon * PI / 180.0) + 1) / 2.0;
                   else
-                    wb = 0;                                                                                                             // values of 10 deg and 2.4 not yet well determined
-                  wsum = (mp - 3.0) * ((1 - wb) * pow(fr / 408.0, -2.52 + 0.016 * gp) + wb * pow(fr / 408.0, -2.8 - 0.13 * gp)) + 3.0;  // best values from 2015:024
-                  if (fabs(glat - 45) < 15 && fabs(glon - 27) < 15) wsum = mp * pow(150.0 / 408.0, -2.5) * pow(fr / 150.0,
-                                                                                                               -3.0 - 0.5 * gp);  // test north polar spur region
+                    wb = 0;  // values of 10 deg and 2.4 not yet well determined
+                  wsum = (mp - 3.0) * ((1 - wb) * pow(fr / 408.0, -2.52 + 0.016 * gp) + wb * pow(fr / 408.0, -2.8 - 0.13 * gp)) +
+                         3.0;  // best values from 2015:024
+                  if (fabs(glat - 45) < 15 && fabs(glon - 27) < 15)
+                    wsum = mp * pow(150.0 / 408.0, -2.5) * pow(fr / 150.0,
+                                                               -3.0 - 0.5 * gp);  // test north polar spur region
                 }
               }
               if (skymode & 4) wsum += telec * opac * pow(fr / 150.0, -2.0);           // ion emission
               if (skymode & 8) wsum += (telec - wsum) * opac * pow(fr / 150.0, -2.0);  // ion emission and absorption
               if (skymode & 16) wsum = 500.0 * pow(fr / 150.0, -2.5);
-              if (cmb & 16) wsum2 = 3e-3 * wsum * cos(2 * PI * fr * 1e6 * 50.0 * (1.0 - cos(el * PI / 180.0) * cos((azz - 90) * PI / 180.0)) / 3e8);  // part in 1e3 scatter object east of antenna
-              if (cmb & 256) wsum2 = -0.5 * (1 - exp(-7 * exp(-(fr - 78) * (fr - 78) * (-log(-log((1 + exp(-7.0)) / 2.0) / 7.0)) / (19 * 19 * 0.25)))) / (1 - exp(-7.0));  // adding signature test
+              if (cmb & 16)
+                wsum2 = 3e-3 * wsum *
+                        cos(2 * PI * fr * 1e6 * 50.0 * (1.0 - cos(el * PI / 180.0) * cos((azz - 90) * PI / 180.0)) /
+                            3e8);  // part in 1e3 scatter object east of antenna
+              if (cmb & 256)
+                wsum2 = -0.5 * (1 - exp(-7 * exp(-(fr - 78) * (fr - 78) * (-log(-log((1 + exp(-7.0)) / 2.0) / 7.0)) / (19 * 19 * 0.25)))) /
+                        (1 - exp(-7.0));  // adding signature test
               //  printf("fr %f amp %e wsum %e wsum2 %e azz %lf el
               //  %lf\n",fr,amp,wsum,wsum2,azz,el);
             } else
@@ -2312,8 +2261,9 @@ double beamcorr(double freq, int bfit, double ang, double secs, double mcalc[], 
 
     for (frq = 0; frq < nbeam; frq++) data[frq] = (fsum[frq] / fsum1[frq]) / (fsum2[frq] / fsum2[frq150]);  // normalize to 150 21 Jan 16
     if (cmb & 512)
-      for (frq = 0; frq < nbeam; frq++) data[frq] = (fsum[frq] / fsum1[frq]) / pow((frqst + frq * frqspac) / ((double)(frqst + frq150 * frqspac)),
-                                                                                   -2.5);  // previous
+      for (frq = 0; frq < nbeam; frq++)
+        data[frq] = (fsum[frq] / fsum1[frq]) / pow((frqst + frq * frqspac) / ((double)(frqst + frq150 * frqspac)),
+                                                   -2.5);  // previous
     polyfitr(bfit, nbeam, data, mcalc, wt, data2, fitf, aarr, bbrr);
     rms = 0;
     sum = 0;
@@ -2348,8 +2298,8 @@ double beamcorr(double freq, int bfit, double ang, double secs, double mcalc[], 
 
 //  alternate for test
 
-double beamcorr2(double freq, int bfit, double ang, double secs, double mcalc[], double fitf[], long double aarr[], double bbrr[], int skymode, int integ, double *lst, double bb[], double *bspac,
-                 int cmb, double *freqref, double fbstart, double fbstop, int site) {
+double beamcorr2(double freq, int bfit, double ang, double secs, double mcalc[], double fitf[], long double aarr[], double bbrr[], int skymode,
+                 int integ, double *lst, double bb[], double *bspac, int cmb, double *freqref, double fbstart, double fbstop, int site) {
   char name[255], buf[32768], *p;
   FILE *file3;
   static double azel[360 * 91 * NBEAM], data[NBEAM], data2[NBEAM], wt[NBEAM], fsum[NBEAM], fsum1[NBEAM], fsum2[NBEAM];
@@ -2668,7 +2618,8 @@ void dsmooth(int n, double data[], double data2[], double wt[], double mcalc[], 
   }
 }
 
-double polyfitrc(int npoly, int nfreq, double ddata[], double mcalc[], double wtt[], double dataout[], double fitfn[], long double aarr[], double bbrr[], int mode) {
+double polyfitrc(int npoly, int nfreq, double ddata[], double mcalc[], double wtt[], double dataout[], double fitfn[], long double aarr[],
+                 double bbrr[], int mode) {
   int i, iter;
   double cons[50];
   polyfitr(npoly, nfreq, ddata, mcalc, wtt, dataout, fitfn, aarr, bbrr);
@@ -2687,7 +2638,8 @@ double polyfitrc(int npoly, int nfreq, double ddata[], double mcalc[], double wt
   return bbrr[0];
 }
 
-double polyfitr2(int npoly, int nfreq, double ddata[], double mcalc[], double wtt[], double dataout[], double fitfn[], long double aarr[], double bbrr[], double cons[]) {
+double polyfitr2(int npoly, int nfreq, double ddata[], double mcalc[], double wtt[], double dataout[], double fitfn[], long double aarr[],
+                 double bbrr[], double cons[]) {
   int i, j, k, kk, m1, m2;
   double re;
   for (i = 0; i < nfreq; i++) {
@@ -2722,15 +2674,14 @@ double polyfitr2(int npoly, int nfreq, double ddata[], double mcalc[], double wt
   qrd(aarr, npoly, bbrr);
   for (i = 0; i < nfreq; i++) {
     re = 0.0;
-    for (j = 0; j < npoly; j++) {
-      re += bbrr[j] * fitfun(j, i, nfreq, fitfn);
-    }
+    for (j = 0; j < npoly; j++) { re += bbrr[j] * fitfun(j, i, nfreq, fitfn); }
     dataout[i] = re;
   }
   return bbrr[0];
 }
 
-double polyfitr(int npoly, int nfreq, double ddata[], double mcalc[], double wtt[], double dataout[], double fitfn[], long double aarr[], double bbrr[]) {
+double polyfitr(int npoly, int nfreq, double ddata[], double mcalc[], double wtt[], double dataout[], double fitfn[], long double aarr[],
+                double bbrr[]) {
   int i, j, k, kk, m1, m2;
   double re, dd;
   for (i = 0; i < nfreq; i++) {
@@ -2768,9 +2719,7 @@ double polyfitr(int npoly, int nfreq, double ddata[], double mcalc[], double wtt
   qrd(aarr, npoly, bbrr);
   for (i = 0; i < nfreq; i++) {
     re = 0.0;
-    for (j = 0; j < npoly; j++) {
-      re += bbrr[j] * fitfun(j, i, nfreq, fitfn);
-    }
+    for (j = 0; j < npoly; j++) { re += bbrr[j] * fitfun(j, i, nfreq, fitfn); }
     dd = re;
     dataout[i] = dd;
   }
@@ -2860,9 +2809,7 @@ void qrd(long double a[], int n, double b[]) {
   for (i = n - 2, pi = (n - 2); i >= 0; pi -= 1, i--) {
     for (j = n - 1; j > i; j--) {
       sum = 0.0;
-      for (k = i + 1, pk = pi + 1; k <= j; pk += 1, k++) {
-        sum += u[pi][k] * u[pk][j];
-      }
+      for (k = i + 1, pk = pi + 1; k <= j; pk += 1, k++) { sum += u[pi][k] * u[pk][j]; }
       u[pi][j] = -u[pi][i] * sum;
     }
   }
@@ -2889,7 +2836,8 @@ void qrd(long double a[], int n, double b[]) {
 
 double fitfun(int j, int i, int nfreq, double fitfn[]) { return fitfn[i + j * nfreq]; }
 
-void plotfspec(int np, double freqq[], double data[], double data2[], double wtt[], double ddscale, int mode, int num, char title[], char datfile[], char info[])
+void plotfspec(int np, double freqq[], double data[], double data2[], double wtt[], double ddscale, int mode, int num, char title[], char datfile[],
+               char info[])
 // plot the spectrum
 {
   char txt[256];
@@ -2937,9 +2885,7 @@ void plotfspec(int np, double freqq[], double data[], double data2[], double wtt
   avv = avv / ss;
   rms1 = 0;
   for (k = 0; k < np; k++)
-    if (wtt[k]) {
-      rms1 += (data2[k] - data[k] - av) * (data2[k] - data[k] - av);
-    }
+    if (wtt[k]) { rms1 += (data2[k] - data[k] - av) * (data2[k] - data[k] - av); }
   rms1 = sqrt(rms1 / ss);
   nter = 3;
   dmin = 0;
@@ -3120,7 +3066,8 @@ void outfspec(int np, double freqq[], double data[], double skymodel[], double s
   fclose(file);
 }
 
-void outcal(int np, double freqq[], complex double s11lna[], double sca[], double ofs[], double tlnau[], double tlnacc[], double tlnacs[], double wtcal[], char title[])
+void outcal(int np, double freqq[], complex double s11lna[], double sca[], double ofs[], double tlnau[], double tlnacc[], double tlnacs[],
+            double wtcal[], char title[])
 // writeout calibrated spectrum
 {
   char txt[256];
@@ -3164,7 +3111,8 @@ void outsim(int np, double freqq[], double spant[], int yr, int dy, int hr, int 
   fclose(file);
 }
 
-void readcal(int *np, double freqq[], complex double s11lna[], double sca[], double ofs[], double tlnau[], double tlnacc[], double tlnacs[], double wtcal[]) {
+void readcal(int *np, double freqq[], complex double s11lna[], double sca[], double ofs[], double tlnau[], double tlnacc[], double tlnacs[],
+             double wtcal[]) {
   char txt[256], buf[32768];
   double freq, re, im, ssca, oofs, t0, t1, t2, t3;
   complex double T;
@@ -3203,8 +3151,8 @@ void readcal(int *np, double freqq[], complex double s11lna[], double sca[], dou
   fclose(file);
 }
 
-void plotvna(int np, double freqq[], complex double data[], double wtt[], int npout, double freqq2[], complex double data2[], double dbdiff[], double pdiff[], int mode, double rmsdb, double rmsphase,
-             int nfit, char *fname)
+void plotvna(int np, double freqq[], complex double data[], double wtt[], int npout, double freqq2[], complex double data2[], double dbdiff[],
+             double pdiff[], int mode, double rmsdb, double rmsphase, int nfit, char *fname)
 // plot the spectrum
 {
   char txt[256];

@@ -1,2 +1,5 @@
 BasedOnStyle: Google
-ColumnLimit: 200
+ColumnLimit: 150
+AllowShortBlocksOnASingleLine: Always
+AllowShortEnumsOnASingleLine: true
+AllowShortIfStatementsOnASingleLine: WithoutElse
