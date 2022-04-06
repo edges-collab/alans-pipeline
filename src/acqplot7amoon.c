@@ -249,6 +249,7 @@ int main(int argc, char *argv[]) {
       if (lst < 0.0) lst += 24.0;
       printf("%4d:%03d:%02d:%02d:%02d %5.2f ", yr, dy, hr, mn, sc, lst);
       j = 0;
+
       if ((dy == day || day == 0) && (gal == 0 || (gal > 0.0 && fabs(ha) < gal) || (gal < 0.0 && fabs(ha) >= 6.0)) &&
           (fabs(gha - ha) < dgha || fabs(gha - ha - 24.0) < dgha || gha > 1e3) && (nstart == -1 || (nstart <= line && nstart > 0)) &&
           (nstart != -999) && el < sunlim && ((mel < moonlim && moonlim < 0) || (mel > moonlim && moonlim > 0) || !moonlim) &&
@@ -736,6 +737,7 @@ int main(int argc, char *argv[]) {
     } else
       for (i = 0; i < np; i++) wtt[i] = wtts[i];
   }
+
   if (smooth) dsmooth(np, smooth, data, wtt);
   if (smooth)
     resol = (fstop * 1e06 / nspec) * smooth;

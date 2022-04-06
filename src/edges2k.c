@@ -655,12 +655,12 @@ int main(int argc, char *argv[]) {
   else
     sprintf(info, " ");
 
-  if (nant && (nopen || nshort) && nhot && namb && ns11ant && ns11lna && ns11hot && ns11amb && ns11cab1 &&
-      !nocal) {  // continue as all data is present
-    //      L = pow(10.0,-0.1*atten);  // L not used if atten needed for cable
-    //      use R factor method of memo 98
+  if (nant && (nopen || nshort) && nhot && namb && ns11ant && ns11lna && ns11hot && ns11amb && ns11cab1 && !nocal) {  
+      // continue as all data is present
+      //      L = pow(10.0,-0.1*atten);  // L not used if atten needed for cable
+      //      use R factor method of memo 98
 
-    // fit s11 with series
+      // fit s11 with series
 
     printf(
         "nopen %d nshort %d nhot %d namb %d ns11hot %d ns11amb %d ns11cab1 %d "
@@ -680,6 +680,25 @@ int main(int argc, char *argv[]) {
       fittp(ns11rig, freqs11rig, s12rig, wttrig, namb, freqamb, ss12rig, nfit2, fitf, mcalc, aarr, bbrr, 8, -1, rigfname);
       fittp(ns11rig, freqs11rig, s22rig, wttrig, namb, freqamb, ss22rig, nfit2, fitf, mcalc, aarr, bbrr, 9, -1, rigfname);
     }
+
+    FILE *s11file;
+    s11file = fopen("all_modeled_s11s.txt", "w");
+    fprintf(s11file, "# freq, re(lna), im(lna), re(amb), im(amb), re(hot), im(hot), re(open), im(open), re(short), im(short), re(sr_s11), im(sr_s11_, re(sr_s12), im(sr_s12), re(sr_s22_, im(sr_s22)\n");
+    for (i=0; i < namb; i++){
+      fprintf(s11file, "%f %e %e %e %e %e %e %e %e %e %e %e %e %e %e %e %e\n",
+        freqamb[i], 
+        creal(ss11lna[i]), cimag(ss11lna[i]),
+        creal(ss11amb[i]), cimag(ss11amb[i]),
+        creal(ss11hot[i]), cimag(ss11hot[i]),
+        creal(ss11cab[i]), cimag(ss11cab[i]),
+        creal(ss11cab[namb+i]), cimag(ss11cab[namb+i]),
+        creal(ss11rig[i]), cimag(ss11rig[i]),
+        creal(ss12rig[i]), cimag(ss12rig[i]),
+        creal(ss22rig[i]), cimag(ss22rig[i])
+      );
+    }
+    fclose(s11file);
+
     if (!nopen) {
       for (i = 0; i < namb; i++) {
         ss11cab[i] = ss11cab[i + namb];
@@ -764,6 +783,7 @@ int main(int argc, char *argv[]) {
       wavefit(nopen, nshort, wfit, sspopen, wtcal, freqopen, ss11cab, ss11lna, tcab, tload, tamb, tlna0, tlna1, tlna2, dataout, mcalc, fitf, aarr,
               bbrr, &delayln);
     }
+    printf("Got best delay: %g\n", delayln);
 
     plotfspec(nopen + nshort, freqopen, sspopen, dataout, wtcal, dscale, 0, 3, openfile, shortfile, info);  // check on fit to open cable
     plotnwave(namb, freqopen, tlna0, tlna1, tlna2, delayln, wfit);
@@ -1295,7 +1315,7 @@ void fittp(int np, double freqq2[], complex double s11[], double wtt[], int npou
         delay = del;
       }
     }
-    //      printf("Sp delay %e\n",delay);
+    printf("Sp delay for mode %d: %e\n", mode, delay);
   }
   i1 = 0;
   for (i = 0; i < np && i1 == 0; i++)

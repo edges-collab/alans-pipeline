@@ -53,7 +53,7 @@ if ( -e spesum2.txt) rm spesum2.txt
 
 while ($day <= $last_day)
 
-set outfile = $results/final_average_$day.txt
+set outfile = $results/specavg_cal_$day.txt
 
 if ( ($refresh_calspec < 2) & ( ($refresh_calspec == 1) || !( -e $outfile) ) ) then
 
