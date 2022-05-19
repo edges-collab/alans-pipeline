@@ -896,6 +896,8 @@ int main(int argc, char *argv[]) {
     fittp(ns11rig, freqs11rig, s12rig, wttrig, nant, freqant, ss12rig, nfit2, fitf, mcalc, aarr, bbrr, 8, -1, rigfname);
     fittp(ns11rig, freqs11rig, s22rig, wttrig, nant, freqant, ss22rig, nfit2, fitf, mcalc, aarr, bbrr, 9, -1, rigfname);
   }
+
+
   if ((freqant[nant - 1] + freqant[0]) / 2.0 < 100.0)
     freqr = 75.0;
   else
@@ -1130,6 +1132,17 @@ int main(int argc, char *argv[]) {
       }  // add back cmb
     if (kk == 0) err1 = sqrt(aarr[nfit - 1 + (nfit - 1) * nfit]);
   }
+
+  FILE *ants11file;
+  ants11file = fopen("modeled_antenna_s11.txt", "w");
+  fprintf(ants11file, "# freq, re(s11), im(s11)\n");
+  for (i=0; i < nant; i++){
+    fprintf(ants11file, "%f %e %e\n",
+      freqant[i], 
+      creal(ss11ant[i]), cimag(ss11ant[i])
+    );
+  }
+  fclose(ants11file);
 
   if (smooth) {
     dsmooth(nant, dataout, dataout2, wtant, mcalc, fabs(smooth));
