@@ -57,7 +57,7 @@ set outfile = $results/specavg_cal_$day.txt
 
 if ( ($refresh_calspec < 2) & ( ($refresh_calspec == 1) || !( -e $outfile) ) ) then
 
-/data4/nmahesh/edges/code_from_alan/edges2k  -fstart 50 -fstop 100 -spant $results/spegva$day.txt -s11ant  $c -mfit 3 -wfstart 51 -wfstop 99 -lmode 6 -tant 296 -eorcen 150 -skymode 384 -antaz 354 -wtmode 100 -nfit4 10 -smooth -8 -low 1 -mdd 4 -delayant  0.0e-12 -adb 0.0 -cmb 2 -ldb 0.0 -delaylna 0e-12 -adb 0.0 -delayant 0.0e-12 -test 0 -eoramp -0.5 -eorwid 0 -eorcen 78 -tau 7 
+../bin/edges2k  -fstart 50 -fstop 100 -spant $results/spegva$day.txt -s11ant  $c -mfit 3 -wfstart 51 -wfstop 99 -lmode 6 -tant 296 -eorcen 150 -skymode 384 -antaz 354 -wtmode 100 -nfit4 10 -smooth -8 -low 1 -mdd 4 -delayant  0.0e-12 -adb 0.0 -cmb 2 -ldb 0.0 -delaylna 0e-12 -adb 0.0 -delayant 0.0e-12 -test 0 -eoramp -0.5 -eorwid 0 -eorcen 78 -tau 7 
 mv spe0.txt $outfile
 
 endif
