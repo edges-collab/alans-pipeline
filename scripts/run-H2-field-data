@@ -3,15 +3,17 @@
 set c = ../data/S11_blade_low_band_2015_342_03_14.txt.csv
 set results = H2Case
 set field_spectra_dir = /data5/edges/data/2014_February_Boolardy/mro/low
-set refresh_spectra = 2  # 2 for definitely don't, 0 for auto, 1 for definitely do.
+set refresh_spectra = 1  # 2 for definitely don't, 0 for auto, 1 for definitely do.
+
 set refresh_calspec = 1  # 2 for definitely don't, 0 for auto, 1 for definitely do.
+
 set first_day_read = 616
 set first_day_cal = 616  # make it 616 if you want to include all days in the cal
+
 set last_day = 830
 
 
 set day = $first_day_read
-
 while ($day <= $last_day)
 
 set outfile = $results/spegva$day.txt
@@ -31,7 +33,7 @@ echo Reading/Averaging $year\_$day2 to $outfile
 if($year == 2015) continue
 if($year == 2016 || $year == 2017) cat $field_spectra_dir/$year/$year\_$day2* >>! temp_20
 
-../bin/acqplot7amoon temp_20 -gha 12 -dgha 6 -rfi 2.5 -tcal 1000 -pfit 37 -fstart 40 -fstop 100 -smooth 8 -pkpwrm 40 -peakpwr 3 -minpwr 0.7 -nrfi 4 -dloadmax 1000 -adcov 0.4 -maxrmsf 200 -maxfm 200  >! temp
+../bin/acqplot7amoon temp_20 -gha 12 -dgha 6 -rfi 2.5 -tcal 1000 -pfit 37 -fstart 40 -fstop 100 -smooth 8 -pkpwrm 40 -peakpwr 3 -minpwr 0.7 -nrfi 4 -dloadmax 1000 -adcov 0.4 -maxrmsf 200 -maxfm 200  >>! temp
 
 mv spe.txt $outfile
 rm temp_20
