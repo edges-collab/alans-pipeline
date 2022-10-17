@@ -49,8 +49,9 @@ in the repo).
 
 ## Installation
 
+
 Should be as easy as typing `make`. All the executables will be placed
-in `bin/`.
+in `bin/`. Make sure to create a 'bin/' directory before running 'make'.
 
 ## Re-creating the H2 case.
 

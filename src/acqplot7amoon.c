@@ -547,6 +547,11 @@ int main(int argc, char *argv[]) {
             line, temp, avpwrt, 100.0 * avpwr2 / avpwrt, nline, pkpwr, ppmax, adcov, swpos, wttt, tempr, fmpwr, jj, rrmsf);
         np = j;
       }
+      else
+      printf(
+                    "line %4d t %d tot_pwr %6.3f sig_percnt %2d cyc_accepted %4d peak %3.0f dB ppmax %d adcov %3.1f swpos %d wttt %2d temp %5.1f fmpwr "
+            "%5.1f rmsf%d %5.1f",
+            line, temp, avpwrt, 0, nline, pkpwr, ppmax, adcov, swpos, 0, tempr, fmpwr, jj, rrmsf);
       if (j == 0) printf("\n");
     }
   }
