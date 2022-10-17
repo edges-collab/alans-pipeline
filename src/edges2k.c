@@ -903,6 +903,17 @@ int main(int argc, char *argv[]) {
   else
     freqr = 150.0;
   if (freqref > freqr * 1.5) low = 1;
+  
+  FILE *lossfile;
+  FILE *beamcorrfile;
+  double refsky;
+  
+  lossfile = fopen("loss.txt", "w");
+  beamcorrfile = fopen("beamcorr.txt", "w");
+  
+  fprintf(lossfile, "# freq, loss, tloss [(1 - loss)*Tant]\n");
+  fprintf(beamcorrfile, "# freq, skymodel, refskymodel, beamcorr\n");
+
   for (i = 0; i < nant; i++) {
     sspant[i] = (spant[i] - tamb) * tcal_scasm[i] + tamb - tcal_ofssm[i];
     //   if(freqant[i] < wfstart || freqant[i] > wfstop || wtcal[i] == 0)
@@ -926,6 +937,9 @@ int main(int argc, char *argv[]) {
     if (wtant[i] && (La < 0.1 || La > 1.0)) printf("check loss freq %f La %f\n", freqant[i], La);
 
     ltemp[i] = (1.0 - La) * tant;
+
+    fprintf(lossfile, "%f %e %e\n", freqant[i], La, ltemp[i]);
+
     dataout[i] = lossinv(dataout[i], tant, La);
 
     if (!(i % (nant / 10)))
@@ -941,22 +955,28 @@ int main(int argc, char *argv[]) {
       dataout[i] =
           beamcorr(freqant[i] * (1.0 + low), bfit2, antaz, secs, mcalc, fitf, aarr, bbrr, 0, 0, &lst, bb2, &bspac, cmb, &freqref, 0, 0, site, map) *
           pow(1.0 / (1.0 + low), -2.5);  // substitute  beamcorrection
-    if (skymode >= 0) {
-      skymodel[i] =
-          beamcorr(freqant[i] * (1.0 + low), bfit, antaz, secs, mcalc, fitf, aarr, bbrr, 0, 0, &lst, bb, &bspac, cmb, &freqref, 0, 0, site, map) *
-          pow(1.0 / (1.0 + low), -2.5);
-      //                    dataout[i] = dataout[i] - (skymodel[i] -
-      //                    beamcorr(150.0,bfit,antaz,secs,mcalc,fitf,aarr,bbrr,0,0,&sun,&lst,bb,bbsun)*pow(freqant[i]/150.0,-2.5));
-      dataout[i] = dataout[i] *
-                   beamcorr(freqref, bfit, antaz, secs, mcalc, fitf, aarr, bbrr, 0, 0, &lst, bb, &bspac, cmb, &freqref, 0, 0, site, map) *
-                   pow(freqant[i] / freqref, -2.5) / skymodel[i];
-    }
-    if (skymod2 >= 0) {
-      skymodel[i] =
-          beamcorr2(freqant[i] * (1.0 + low), bfit, antaz, secs, mcalc, fitf, aarr, bbrr, 0, 0, &lst, bb, &bspac, cmb, &freqref, 0, 0, site) *
-          pow(1.0 / (1.0 + low), -2.5);
-      dataout[i] = dataout[i] * beamcorr2(freqref, bfit, antaz, secs, mcalc, fitf, aarr, bbrr, 0, 0, &lst, bb, &bspac, cmb, &freqref, 0, 0, site) *
-                   pow(freqant[i] / freqref, -2.5) / skymodel[i];
+    
+    if ((skymode >= 0) || (skymod2 >= 0)){
+      if (skymode >= 0) {
+        skymodel[i] =
+            beamcorr(freqant[i] * (1.0 + low), bfit, antaz, secs, mcalc, fitf, aarr, bbrr, 0, 0, &lst, bb, &bspac, cmb, &freqref, 0, 0, site, map) *
+            pow(1.0 / (1.0 + low), -2.5);
+        refsky = 
+            beamcorr(freqref, bfit, antaz, secs, mcalc, fitf, aarr, bbrr, 0, 0, &lst, bb, &bspac, cmb, &freqref, 0, 0, site, map) *
+            pow(freqant[i] / freqref, -2.5);
+      }
+      if (skymod2 >= 0) {
+        skymodel[i] =
+            beamcorr2(freqant[i] * (1.0 + low), bfit, antaz, secs, mcalc, fitf, aarr, bbrr, 0, 0, &lst, bb, &bspac, cmb, &freqref, 0, 0, site) *
+            pow(1.0 / (1.0 + low), -2.5);
+        refsky = 
+            beamcorr2(freqref, bfit, antaz, secs, mcalc, fitf, aarr, bbrr, 0, 0, &lst, bb, &bspac, cmb, &freqref, 0, 0, site) *
+            pow(freqant[i] / freqref, -2.5) ;
+      }
+
+      dataout[i] = dataout[i] * refsky / skymodel[i];
+
+      fprintf(beamcorrfile, "%f %e %e %e\n", freqant[i], skymodel[i], refsky, refsky / skymodel[i]);
     }
 
     if (test & 1 && (skymode >= 0 || skymod2 >= 0) && (skymode >= 256 || skymod2 >= 256)) dataout[i] = skymodel[i];  // substitute  beamcorrection
@@ -983,6 +1003,8 @@ int main(int argc, char *argv[]) {
       dataout[i] += dataout[i] * ion * (-1e-3 * pow(freqant[i] / 150.0, -2.0)) + ion * 1e3 * 1e-3 * pow(freqant[i] / 150.0, -2.0);
     }  // 1% ion at 1000K
   }
+  fclose(lossfile);
+  fclose(beamcorrfile);
 
   if (sim) {
     for (i = 0; i < nant; i++) {
@@ -1989,11 +2011,9 @@ double beamcorr(double freq, int bfit, double ang, double secs, double mcalc[], 
     if (map == 0 || map == 2) {
       if ((file3 = fopen("408-all-noh", "r")) == NULL) { return 0; }
     }  // map 0= use Haslam 1= use Guzman 2=Haslam + Guzman 3=Guzman + Haslam
-    printf("let's print this\n");
     if (map == 1 || map == 3) {
       if ((file3 = fopen("/home/aeer/fits/45mhz.txt", "r")) == NULL) { return 0; }
     }  // use Guzmin map
-    printf("let's print this 2\n");
     i = j = 0;
     while (fgets(buf, 32768, file3) != 0) {
       p = buf;
@@ -2157,7 +2177,6 @@ double beamcorr(double freq, int bfit, double ang, double secs, double mcalc[], 
                             //    nn = integ/900 + 1; // made a small difference
     d = (double)integ / (double)nn;
 
-    printf("Got here..\n");
     for (n = 0; n < nn; n++) {
       ssecs = secs + d / 2.0 + n * d - ((double)integ) / 2.0;
       sunradec(ssecs, &sunra, &sundec);

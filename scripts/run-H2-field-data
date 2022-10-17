@@ -9,62 +9,77 @@ set first_day_read = 616
 set first_day_cal = 616  # make it 616 if you want to include all days in the cal
 set last_day = 830
 
-
+# First, we read all the field spectra and average them.
 set day = $first_day_read
-
-while ($day <= $last_day)
-
-set outfile = $results/spegva$day.txt
-
-if($day <= 366) set day2 = ` echo $day |awk '{printf("%03d",$1)} '`
-if($day <= 366) set year = 2015
-if($day > 366 && $day <= 732) set day2 = ` echo $day |awk '{printf("%03d",$1-366)} '`
-if($day > 366 && $day <= 732) set year = 2016
-if($day > 732) set day2 = ` echo $day |awk '{printf("%03d",$1-732)} '`
-if($day > 732) set year = 2017
-
-
-if ( ($refresh_spectra < 2) & ( ($refresh_spectra == 1) || !( -e $outfile) ) ) then
-if ( -e $outfile ) rm $outfile
-
-echo Reading/Averaging $year\_$day2 to $outfile
-if($year == 2015) continue
-if($year == 2016 || $year == 2017) cat $field_spectra_dir/$year/$year\_$day2* >>! temp_20
-
-../bin/acqplot7amoon temp_20 -gha 12 -dgha 6 -rfi 2.5 -tcal 1000 -pfit 37 -fstart 40 -fstop 100 -smooth 8 -pkpwrm 40 -peakpwr 3 -minpwr 0.7 -nrfi 4 -dloadmax 1000 -adcov 0.4 -maxrmsf 200 -maxfm 200  >! temp
-
-mv spe.txt $outfile
-rm temp_20
-else
-
 if ($refresh_spectra < 2) then
-echo $outfile exists already, skipping. Was $year\_$day2
-endif
+    while ($day <= $last_day)
+
+        set outfile = $results/spegva$day.txt
+
+        if($day <= 366) set day2 = ` echo $day |awk '{printf("%03d",$1)} '`
+        if($day <= 366) set year = 2015
+        if($day > 366 && $day <= 732) set day2 = ` echo $day |awk '{printf("%03d",$1-366)} '`
+        if($day > 366 && $day <= 732) set year = 2016
+        if($day > 732) set day2 = ` echo $day |awk '{printf("%03d",$1-732)} '`
+        if($day > 732) set year = 2017
+
+
+        if ( ($refresh_spectra == 1) || !( -e $outfile) ) then
+            if ( -e $outfile ) rm $outfile
+
+            echo Reading/Averaging $year\_$day2 to $outfile
+            if($year == 2015) continue
+            if($year == 2016 || $year == 2017) cat $field_spectra_dir/$year/$year\_$day2* >>! temp_20
+
+            ../bin/acqplot7amoon temp_20 -gha 12 -dgha 6 -rfi 2.5 -tcal 1000 -pfit 37 -fstart 40 -fstop 100 -smooth 8 -pkpwrm 40 -peakpwr 3 -minpwr 0.7 -nrfi 4 -dloadmax 1000 -adcov 0.4 -maxrmsf 200 -maxfm 200  >! temp
+
+            mv spe.txt $outfile
+            rm temp_20
+        else
+            echo $outfile exists already, skipping. Was $year\_$day2
+        endif
+
+        @ day = $day + 1
+    end
+else
+    echo Skipping reading/averaging of field spectra.
 endif
 
-@ day = $day + 1
-end
 
+# Now, we calibrate the spectra from each day.
 set day = $first_day_cal
 cp ../results/specal_final_case2.txt specal.txt
 cp ../data/newniv.txt azelq.txt # used for H2
 
 if ( -e spesum2.txt) rm spesum2.txt
 
+
+set caloptions = "-s11ant $c -mfit 3 -wfstart 51 -wfstop 99 -lmode 6 -tant 296 -eorcen 150"
+set caloptions = "$caloptions -skymode 384 -antaz 354 -wtmode 100 -nfit4 10 -smooth -8 -low 1"
+set caloptions = "$caloptions -mdd 4 -delayant  0.0e-12 -adb 0.0 -cmb 2 -ldb 0.0 -delaylna 0e-12"
+set caloptions = "$caloptions -adb 0.0 -delayant 0.0e-12 -test 0 -eoramp -0.5 -eorwid 0 -eorcen 78 -tau 7"
+
+echo Calibrating Field Data with options:
+echo    $caloptions
+
 while ($day <= $last_day)
 
-set outfile = $results/specavg_cal_$day.txt
+    set outfile = $results/specavg_cal_$day.txt
 
-if ( ($refresh_calspec < 2) & ( ($refresh_calspec == 1) || !( -e $outfile) ) ) then
+    if ( ($refresh_calspec < 2) & ( ($refresh_calspec == 1) || !( -e $outfile) ) ) then
 
-/data4/nmahesh/edges/code_from_alan/edges2k  -fstart 50 -fstop 100 -spant $results/spegva$day.txt -s11ant  $c -mfit 3 -wfstart 51 -wfstop 99 -lmode 6 -tant 296 -eorcen 150 -skymode 384 -antaz 354 -wtmode 100 -nfit4 10 -smooth -8 -low 1 -mdd 4 -delayant  0.0e-12 -adb 0.0 -cmb 2 -ldb 0.0 -delaylna 0e-12 -adb 0.0 -delayant 0.0e-12 -test 0 -eoramp -0.5 -eorwid 0 -eorcen 78 -tau 7 
-mv spe0.txt $outfile
+        echo Calibrating Day $day
+        ../bin/edges2k -fstart 50 -fstop 100 -spant $results/spegva$day.txt $caloptions
+        mv spe0.txt $outfile
+        mv loss.txt $results/loss.txt
+        mv beamcorr.txt $results/beamcorr_$day.txt
 
-endif
+    endif
 
-cat $outfile >>! spesum2.txt
-@ day = $day + 1
+    cat $outfile >>! spesum2.txt
+    @ day = $day + 1
 end
+
 
 rm specal.txt
 rm azelq.txt
