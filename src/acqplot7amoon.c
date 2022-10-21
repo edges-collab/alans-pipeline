@@ -74,7 +74,11 @@ int main(int argc, char *argv[]) {
       dload, dloadmax, minpwr, maxrmsf, rrmsf;
   double a00, a01, a10, a11, b0, b1, d, aa00, aa10, aa01, aa11, n0, n1, n2, maxp0, minp0, avp0, np0, mel, maxfm, fmpwr;
   FILE *file1;
+  FILE *timeflag_file;
   char *p;
+  short day_flag, gal_flag, gha_flag, nstart_flag, sunlim_flag, moonlim_flag, delaystart_flag, 
+      adc_flag, buf_flag, tstop_hr_flag, ppercent_flag, pkpower_flag, d150_flag, 
+      dloadmax_flag, rmsf_flag, fmpwr_flag;
   b64init(b64);
   rmsinit(ffun);
   fstart = f = 0.0;
@@ -206,124 +210,246 @@ int main(int argc, char *argv[]) {
   }
   line = nspec = 0;
   printf("file %s\n", fname);
+
+  if ((timeflag_file = fopen("time_flags.txt", "w")) == NULL) {
+    printf("cannot open file: time_flags.txt\n");
+    return 0;
+  }
+
+  fprintf(timeflag_file, 
+    "day0 gal0 gha0 nstart0 sunlim0 moonlim0 delaystart0 adc0 buf0 tstop-hr0 "
+    "day1 gal1 gha1 nstart1 sunlim1 moonlim1 delaystart1 adc1 buf1 tstop-hr1 "
+    "day2 gal2 gha2 nstart2 sunlim2 moonlim2 delaystart2 adc2 buf2 tstop-hr2 "
+    "ppercent pkpower d150 dloadmax rmsf fmpwr\n"
+  );
+
   while (fgets(buf, 1000000, file1) != 0) {
     if (buf[0] == '#' && buf[2] == 's') sscanf(buf, "%*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %d %*s %*s %d %*s %d", &temp, &nblock, &nspec);  // db310
-    if (buf[0] != '*' && buf[0] != '\n' && buf[0] != '#' && buf[0] != ';') {
-      line++;
-      avpwr = avpwr2 = avpwrt = 0;
-      sscanf(buf, "%4d:%3d:%2d:%2d:%2d %d %lf %lf %lf %lf", &yr, &dy, &hr, &mn, &sc, &swpos, &fstart, &fstep, &fstop, &adcov);
-      if (freqstart < fstart) freqstart = fstart;
-      if (fabs(fstep - 0.006104) < 0.001) fstep = 200.0 / nspec;  // for higher accuracy
-      if (nspec == 0) {
-        if (fstep > 0.006408 && fstep < 0.006410) fstep = 420.0 / 65536.0;
-        if (fstep > 0.012)
-          nspec = 16384;
-        else {
-          if (fstep > 0.006)
-            nspec = 32768;
-          else
-            nspec = 65536;
-        }
+    // skip this line if it is a comment
+    if (buf[0] == '*' || buf[0] == '\n' || buf[0] == '#' || buf[0] == ';') continue;
+    
+    line++;
+    avpwr = avpwr2 = avpwrt = 0;
+    sscanf(buf, "%4d:%3d:%2d:%2d:%2d %d %lf %lf %lf %lf", &yr, &dy, &hr, &mn, &sc, &swpos, &fstart, &fstep, &fstop, &adcov);
+    if (freqstart < fstart) freqstart = fstart;
+    if (fabs(fstep - 0.006104) < 0.001) fstep = 200.0 / nspec;  // for higher accuracy
+    if (nspec == 0) {
+      if (fstep > 0.006408 && fstep < 0.006410) fstep = 420.0 / 65536.0;
+      if (fstep > 0.012)
+        nspec = 16384;
+      else {
+        if (fstep > 0.006)
+          nspec = 32768;
+        else
+          nspec = 65536;
       }
-      lon = 116.5 * PI / 180.0;
-      lat = -26.7 * PI / 180.0;
-      secs = tosecs(yr, dy, hr, mn, sc);
-      if (!secsst) secsst = secs;
-      ha = (gst(secs) - (17.0 + 45.67 / 60.0) * PI / 12.0 + lon) * 12.0 / PI;
-      if (ha > 12.0) ha += -24.0;
-      if (ha <= -12.0) ha += 24.0;
-      if (sunlim < 1e3) {
-        sunradec(secs, &ra, &dec);
-        radec_azel(gst(secs) - ra + lon, dec, lat, &az, &el);
-        el = el * 180.0 / PI;
-      } else
-        el = 0;
-      if (moonlim) {
-        moonradec(secs, &ra, &dec, lat, lon);
-        radec_azel(gst(secs) - ra + lon, dec, lat, &az, &mel);
-        mel = mel * 180.0 / PI;
-      } else
-        mel = 0;
-      lst = (gst(secs) + lon) * 12.0 / PI;
-      if (lst > 24.0) lst += -24.0;
-      if (lst < 0.0) lst += 24.0;
-      printf("%4d:%03d:%02d:%02d:%02d %5.2f ", yr, dy, hr, mn, sc, lst);
+    }
+    lon = 116.5 * PI / 180.0;
+    lat = -26.7 * PI / 180.0;
+    secs = tosecs(yr, dy, hr, mn, sc);
+    if (!secsst) secsst = secs;
+    ha = (gst(secs) - (17.0 + 45.67 / 60.0) * PI / 12.0 + lon) * 12.0 / PI;
+    if (ha > 12.0) ha += -24.0;
+    if (ha <= -12.0) ha += 24.0;
+    if (sunlim < 1e3) {
+      sunradec(secs, &ra, &dec);
+      radec_azel(gst(secs) - ra + lon, dec, lat, &az, &el);
+      el = el * 180.0 / PI;
+    } else
+      el = 0;
+    if (moonlim) {
+      moonradec(secs, &ra, &dec, lat, lon);
+      radec_azel(gst(secs) - ra + lon, dec, lat, &az, &mel);
+      mel = mel * 180.0 / PI;
+    } else
+      mel = 0;
+    lst = (gst(secs) + lon) * 12.0 / PI;
+    if (lst > 24.0) lst += -24.0;
+    if (lst < 0.0) lst += 24.0;
+    printf("%4d:%03d:%02d:%02d:%02d %5.2f ", yr, dy, hr, mn, sc, lst);
+    j = 0;
+
+    day_flag = (dy == day || day == 0);
+    gal_flag =(gal == 0 || (gal > 0.0 && fabs(ha) < gal) || (gal < 0.0 && fabs(ha) >= 6.0));
+    gha_flag =(fabs(gha - ha) < dgha || fabs(gha - ha - 24.0) < dgha || gha > 1e3);
+    nstart_flag = (nstart == -1 || (nstart <= line && nstart > 0)) && (nstart != -999);
+    sunlim_flag =el < sunlim;
+    moonlim_flag=((mel < moonlim && moonlim < 0) || (mel > moonlim && moonlim > 0) || !moonlim);
+    delaystart_flag=(secs - secsst > delaystart); 
+    adc_flag=adcov < padcov;
+    buf_flag=strlen(buf) > 131000;
+    tstop_hr_flag=((hr >= tstart && hr <= tstop) || (tstart > tstop && (hr <= tstop || hr >= tstart)));
+    fprintf(timeflag_file, "%d %d %d %d %d %d %d %d %d %d ", 
+      day_flag, gal_flag, gha_flag, nstart_flag, sunlim_flag, moonlim_flag, 
+      delaystart_flag, adc_flag, buf_flag, tstop_hr_flag
+    );
+    
+    if (day_flag && gal_flag && gha_flag && nstart_flag && sunlim_flag && moonlim_flag && delaystart_flag && adc_flag && buf_flag && tstop_hr_flag)
+    {
+      // Everything above got through fine.
+      
+
+      p = buf;
+      p = strstr(p, "spectrum");
+      if (*p && p) p = strchr(p, ' ');
+      while (*p == ' ') p++;
       j = 0;
-
-      if ((dy == day || day == 0) && (gal == 0 || (gal > 0.0 && fabs(ha) < gal) || (gal < 0.0 && fabs(ha) >= 6.0)) &&
-          (fabs(gha - ha) < dgha || fabs(gha - ha - 24.0) < dgha || gha > 1e3) && (nstart == -1 || (nstart <= line && nstart > 0)) &&
-          (nstart != -999) && el < sunlim && ((mel < moonlim && moonlim < 0) || (mel > moonlim && moonlim > 0) || !moonlim) &&
-          (secs - secsst > delaystart) && adcov < padcov && strlen(buf) > 131000 &&
-          ((hr >= tstart && hr <= tstop) || (tstart > tstop && (hr <= tstop || hr >= tstart)))) {
-        p = buf;
-        p = strstr(p, "spectrum");
-        if (*p && p) p = strchr(p, ' ');
-        while (*p == ' ') p++;
-        j = 0;
-        pkpwr = 0;
-        tempr = 0;
-        orbpwr = orbpwr2 = 0;
-        while (j < nspec && p && *p != '\n') {
-          kk = b64[(int)*p];
-          p++;
-          v24 = (kk << 18);
-          kk = b64[(int)*p];
-          p++;
-          v24 |= (kk << 12);
-          kk = b64[(int)*p];
-          p++;
-          v24 |= (kk << 6);
-          kk = b64[(int)*p];
-          p++;
-          v24 |= kk;
-          pwr = -((double)v24) * 1e-5;
-          if (swpos == 0) {
-            avdata0[j] = pwr;
-            pp0 = line;
-          }
-          if (swpos == 1) {
-            avdata1[j] = pwr;
-            pp1 = line;
-          }
-          if (swpos == 2 && (pp0 == line - 2) && (pp1 == line - 1)) {  // need to get adjacent swpos
-            avdata2[j] = pwr;
-            p0 = pow(10.0, 0.1 * avdata0[j]);
-            p1 = pow(10.0, 0.1 * avdata1[j]);
-            p2 = pow(10.0, 0.1 * avdata2[j]);
-            avd0[j] += p0;
-            avd1[j] += p1;
-            avd2[j] += p2;
-            if (tcal > 0) {
-              if (p2 - p1 > 1e-99)
-                data[j] = ((p0 - p1) / (p2 - p1)) * tcal + tload;
-              else
-                data[j] = 0;
-              spload[j] = ((p1) / (p2 - p1)) * tcal + tload;
-            } else
-              data[j] = (-(p0 - p1) / (p2)) * tcal + tload;
-            if (trec) data[j] = ((p1) / (p2 - p1)) * tcal - tload;
-            if (mode == 1) data[j] = p0 * 300.0e08;
-            if (mode == 2) data[j] = p1 * 300.0e08;
-            if (mode == 3) data[j] = p2 * 300.0e08;
-            if (mode == 4) data[j] = (p2 / p1) * tcal;
-            if (mode == 5) data[j] = tcal * (p2 - p1) / p1;
-            if (mode == 6) data[j] = tcal * (p0 - p2) / (p2 - p1) + tcal + tload;
-            if (mode == 7) data[j] = tcal * (p1 - p0) / p0;
-            if (!mode && j < (1000 * nspec) / 32768) data[j] = 0;
-            //                    printf("j %d v24 %d pwr %f data %f\n",j,v24,pwr,data[j]);
-            if (data[j] > pkpwr && fstart + j * fstep > 80.0) pkpwr = data[j];
-            if (data[j] > orbpwr && fabs(fstart + j * fstep - 137.5) < 1.0) orbpwr = data[j];
-          }
-          avpwr += pwr;
-          if (fstart + j * fstep > 100.0) avpwr2 += 50.0 * pow(10.0, 0.1 * pwr);
-          avpwrt += 50.0 * pow(10.0, 0.1 * pwr);
-          j++;
+      pkpwr = 0;
+      tempr = 0;
+      orbpwr = orbpwr2 = 0;
+      while (j < nspec && p && *p != '\n') {
+        kk = b64[(int)*p];
+        p++;
+        v24 = (kk << 18);
+        kk = b64[(int)*p];
+        p++;
+        v24 |= (kk << 12);
+        kk = b64[(int)*p];
+        p++;
+        v24 |= (kk << 6);
+        kk = b64[(int)*p];
+        p++;
+        v24 |= kk;
+        pwr = -((double)v24) * 1e-5;
+        if (swpos == 0) {
+          avdata0[j] = pwr;
+          pp0 = line;
         }
-        if (swpos == 0) { ppercent = 100.0 * avpwr2 / avpwrt; }
-        if (swpos == 2 && (pp0 == line - 2) && (pp1 == line - 1)) {
-          pp0 = pp1 = 0;
+        if (swpos == 1) {
+          avdata1[j] = pwr;
+          pp1 = line;
+        }
+        if (swpos == 2 && (pp0 == line - 2) && (pp1 == line - 1)) {  // need to get adjacent swpos
+          avdata2[j] = pwr;
+          p0 = pow(10.0, 0.1 * avdata0[j]);
+          p1 = pow(10.0, 0.1 * avdata1[j]);
+          p2 = pow(10.0, 0.1 * avdata2[j]);
+          avd0[j] += p0;
+          avd1[j] += p1;
+          avd2[j] += p2;
+          if (tcal > 0) {
+            if (p2 - p1 > 1e-99)
+              data[j] = ((p0 - p1) / (p2 - p1)) * tcal + tload;
+            else
+              data[j] = 0;
+            spload[j] = ((p1) / (p2 - p1)) * tcal + tload;
+          } else
+            data[j] = (-(p0 - p1) / (p2)) * tcal + tload;
+          if (trec) data[j] = ((p1) / (p2 - p1)) * tcal - tload;
+          if (mode == 1) data[j] = p0 * 300.0e08;
+          if (mode == 2) data[j] = p1 * 300.0e08;
+          if (mode == 3) data[j] = p2 * 300.0e08;
+          if (mode == 4) data[j] = (p2 / p1) * tcal;
+          if (mode == 5) data[j] = tcal * (p2 - p1) / p1;
+          if (mode == 6) data[j] = tcal * (p0 - p2) / (p2 - p1) + tcal + tload;
+          if (mode == 7) data[j] = tcal * (p1 - p0) / p0;
+          if (!mode && j < (1000 * nspec) / 32768) data[j] = 0;
+          //                    printf("j %d v24 %d pwr %f data %f\n",j,v24,pwr,data[j]);
+          if (data[j] > pkpwr && fstart + j * fstep > 80.0) pkpwr = data[j];
+          if (data[j] > orbpwr && fabs(fstart + j * fstep - 137.5) < 1.0) orbpwr = data[j];
+        }
+        avpwr += pwr;
+        if (fstart + j * fstep > 100.0) avpwr2 += 50.0 * pow(10.0, 0.1 * pwr);
+        avpwrt += 50.0 * pow(10.0, 0.1 * pwr);
+        j++;
+      }
+      if (swpos == 0) { ppercent = 100.0 * avpwr2 / avpwrt; }
+      if (swpos == 2 && (pp0 == line - 2) && (pp1 == line - 1)) {
+        pp0 = pp1 = 0;
 
-          maxsweep = 1e-99;
+        maxsweep = 1e-99;
+        for (i = 2; i < j - 2; i++) {
+          if (fstart + i * fstep >= 50.0) {
+            a = b = 0;
+            for (m = 0; m < 1; m++) {
+              a += data[i + 1 + m];
+              b += data[i - 1 - m];
+            }
+            a = (a + b) / 2.0;
+            sweep = (data[i] - a);
+            if (fabs(sweep) > maxsweep) maxsweep = fabs(sweep);
+          }
+        }
+
+        rrmsf = rmsf(data);
+
+        fmpwr = 0;
+        for (i = 0; i < j; i++) {
+          if (fstart + i * fstep > 88 && fstart + i * fstep < 120) {
+            a = data[i] - 0.5 * (data[i + 1] + data[i - 1]);
+            if (a > fmpwr) fmpwr = a;
+          }
+        }
+
+        a = b = 1e-99;
+        for (i = 0; i < j; i++) {
+          if (fabs(fstart + i * fstep - 137.9) < 0.02) orbpwr2 = data[i] - data[i + 50];
+          if (data[i] > 0.0 && data[i] < pkpwr / 10.0 && fstart + i * fstep > 80.0) {
+            a += data[i];
+            b++;
+          }
+        }
+        pkpwr = 10.0 * log10(pkpwr / (a / b));
+        orbpwr = 10.0 * log10(orbpwr / (a / b));
+        if (orbpwr > pkpwr) pkpwr = orbpwr;
+        pkpwr = orbpwr;  // O.K. orbpwr and peak power sufficient for verystrong signals
+        if (orbpwr2 > 0) orbpwr2 = 10.0 * log10(orbpwr2 / (a / b));
+        //                if(orbpwr2 > 5.0) pkpwr = 10.0*orbpwr2;
+        tempr = tempmon(fstart, fstep, avdata0);
+
+        if (dloadmax < 1e6) {
+          av = 0;
+          a = 0;
+          for (i = 0; i < j; i++) {
+            if (fstart + i * fstep > 50.0 && fstart + i * fstep < 198.0) {
+              av += sploadp[i] - spload[i];
+              a++;
+            }
+          }
+          if (sploadp[j / 2])
+            dload = fabs(av / a) * sqrt(nblock * (double)nspec * 100e6 / 400e6) / rmstheory;  // fix for fastspec
+          else
+            dload = 0;
+          if (dload > dloadmax) printf("dload %f\n", dload);
+          for (i = 0; i < j; i++) sploadp[i] = spload[i];
+        }
+
+        d = 0;
+        if (d150 < 1e6) {
+          av = a = 0.0;
+          for (i = 0; i < j; i++) {
+            if (fabs(fstart + i * fstep - 153.5) < 1.5) {
+              av += data[i];
+              a++;
+            }
+          }
+          rms = 0;
+          av = av / a;
+          for (i = 0; i < j; i++) {
+            if (fabs(fstart + i * fstep - 153.5) < 1.5) { rms += (data[i] - av) * (data[i] - av); }
+          }
+          av = b = 0;
+          for (i = 0; i < j; i++) {
+            if (fabs(fstart + i * fstep - 157.0) < 1.5) {
+              av += data[i];
+              b++;
+            }
+          }
+          d = 200.0 * sqrt(rms / a) / (av / b);
+          if (d >= d150) printf("d150 %f %f\n", d, av / b);
+        }
+
+        if ((ppercent < peakpwr && (ppercent > minpwr)) && ((pkpwr < pkpwrm) || (pkpwr > fabs(pkpwrm) && pkpwrm < 0)) && d <= d150 &&
+            dload < dloadmax && rrmsf < maxrmsf && fmpwr < maxfm && j == nspec)
+        {
+          fprintf(timeflag_file, " 1 1 1 1 1 1\n");
+
+          wttt = 1;
+          if (ppercent > maxp0) maxp0 = ppercent;
+          if (ppercent < minp0) minp0 = ppercent;
+          avp0 += ppercent;
+          np0++;
+
           for (i = 2; i < j - 2; i++) {
             if (fstart + i * fstep >= 50.0) {
               a = b = 0;
@@ -333,231 +459,162 @@ int main(int argc, char *argv[]) {
               }
               a = (a + b) / 2.0;
               sweep = (data[i] - a);
-              if (fabs(sweep) > maxsweep) maxsweep = fabs(sweep);
+              if (sweep > mxsweep) wtts[i] = 0;
             }
           }
 
-          rrmsf = rmsf(data);
-
-          fmpwr = 0;
-          for (i = 0; i < j; i++) {
-            if (fstart + i * fstep > 88 && fstart + i * fstep < 120) {
-              a = data[i] - 0.5 * (data[i + 1] + data[i - 1]);
-              if (a > fmpwr) fmpwr = a;
-            }
+          if (nns < ns) {
+            for (i = 0; i < j; i++) data2[i] += data[i];
+            nns++;
+            nt++;
+            ntt++;
           }
 
-          a = b = 1e-99;
-          for (i = 0; i < j; i++) {
-            if (fabs(fstart + i * fstep - 137.9) < 0.02) orbpwr2 = data[i] - data[i + 50];
-            if (data[i] > 0.0 && data[i] < pkpwr / 10.0 && fstart + i * fstep > 80.0) {
-              a += data[i];
-              b++;
-            }
-          }
-          pkpwr = 10.0 * log10(pkpwr / (a / b));
-          orbpwr = 10.0 * log10(orbpwr / (a / b));
-          if (orbpwr > pkpwr) pkpwr = orbpwr;
-          pkpwr = orbpwr;  // O.K. orbpwr and peak power sufficient for verystrong signals
-          if (orbpwr2 > 0) orbpwr2 = 10.0 * log10(orbpwr2 / (a / b));
-          //                if(orbpwr2 > 5.0) pkpwr = 10.0*orbpwr2;
-          tempr = tempmon(fstart, fstep, avdata0);
-
-          if (dloadmax < 1e6) {
-            av = 0;
-            a = 0;
-            for (i = 0; i < j; i++) {
-              if (fstart + i * fstep > 50.0 && fstart + i * fstep < 198.0) {
-                av += sploadp[i] - spload[i];
-                a++;
-              }
-            }
-            if (sploadp[j / 2])
-              dload = fabs(av / a) * sqrt(nblock * (double)nspec * 100e6 / 400e6) / rmstheory;  // fix for fastspec
-            else
-              dload = 0;
-            if (dload > dloadmax) printf("dload %f\n", dload);
-            for (i = 0; i < j; i++) sploadp[i] = spload[i];
-          }
-
-          d = 0;
-          if (d150 < 1e6) {
-            av = a = 0.0;
-            for (i = 0; i < j; i++) {
-              if (fabs(fstart + i * fstep - 153.5) < 1.5) {
-                av += data[i];
-                a++;
-              }
-            }
-            rms = 0;
-            av = av / a;
-            for (i = 0; i < j; i++) {
-              if (fabs(fstart + i * fstep - 153.5) < 1.5) { rms += (data[i] - av) * (data[i] - av); }
-            }
-            av = b = 0;
-            for (i = 0; i < j; i++) {
-              if (fabs(fstart + i * fstep - 157.0) < 1.5) {
-                av += data[i];
-                b++;
-              }
-            }
-            d = 200.0 * sqrt(rms / a) / (av / b);
-            if (d >= d150) printf("d150 %f %f\n", d, av / b);
-          }
-
-          if ((ppercent < peakpwr && (ppercent > minpwr)) && ((pkpwr < pkpwrm) || (pkpwr > fabs(pkpwrm) && pkpwrm < 0)) && d <= d150 &&
-              dload < dloadmax && rrmsf < maxrmsf && fmpwr < maxfm && j == nspec) {
-            wttt = 1;
-            if (ppercent > maxp0) maxp0 = ppercent;
-            if (ppercent < minp0) minp0 = ppercent;
-            avp0 += ppercent;
-            np0++;
-
-            for (i = 2; i < j - 2; i++) {
-              if (fstart + i * fstep >= 50.0) {
-                a = b = 0;
-                for (m = 0; m < 1; m++) {
-                  a += data[i + 1 + m];
-                  b += data[i - 1 - m];
-                }
-                a = (a + b) / 2.0;
-                sweep = (data[i] - a);
-                if (sweep > mxsweep) wtts[i] = 0;
-              }
-            }
-
-            if (nns < ns) {
-              for (i = 0; i < j; i++) data2[i] += data[i];
-              nns++;
-              nt++;
-              ntt++;
-            }
-
-            if (nns == ns && nns) {
-              zwt = 1;
-              zwtp = 0;
-              for (i = 0; i < j; i++) wtt[i] = 1;
-              for (jj = 0; jj < 10 && zwt > zwtp; jj++) {
-                for (i = 0; i < j; i++) {  // sliding rms is better
-                  if (fstart + i * fstep >= freqstart && fstart + i * fstep <= freqstop) {
-                    a00 = a11 = a01 = b0 = b1 = 0;
-                    for (k = i - nn; k <= i + nn; k++) {
-                      if (k >= 0 && k < j && abs(k - i) > nn / 2) {
-                        f = fstart + k * fstep;
-                        a00 += wtt[k];
-                        a11 += wtt[k] * f * f;
-                        a01 += wtt[k] * f;
-                        b0 += wtt[k] * data2[k];
-                        b1 += wtt[k] * data2[k] * f;
-                      }
-                    }
-                    a10 = a01;
-                    d = a00 * a11 - a10 * a01;
-                    aa00 = a11 / d;
-                    aa10 = -a01 / d;
-                    aa01 = -a10 / d;
-                    aa11 = a00 / d;
-                    a = aa00 * b0 + aa01 * b1;  // constant
-                    b = aa10 * b0 + aa11 * b1;  // slope
-                    a00 = 0;
-                    a11 = 1e-99;
-                    for (k = i - nn; k <= i + nn; k++) {
-                      if (k >= 0 && k < j && abs(k - i) > nn / 2) {
-                        f = fstart + k * fstep;
-                        av = a + b * f;
-                        a00 += (data2[k] - av) * (data2[k] - av) * wtt[k];
-                        a11 += wtt[k];
-                      }
-                    }
-                    if (d) {
-                      f = fstart + i * fstep;
-                      av = a + b * f;
-                      rms = sqrt(a00 / a11);
-                      b = (data2[i] - av) / (fabs(rfi * 1.2) * rms);  // for rogue ns = 20 rfi = 2.5 scale up to 3.0
-                      if (b > 1)
-                        for (k = i - 1; k <= i + 1; k++) wtt[k] = 0;
-                      specm[i] = av;
-                      spec[i] = (data2[i] - av);
-                      specr[i] = wtt[i] * (data2[i] - av);
+          if (nns == ns && nns) {
+            zwt = 1;
+            zwtp = 0;
+            for (i = 0; i < j; i++) wtt[i] = 1;
+            for (jj = 0; jj < 10 && zwt > zwtp; jj++) {
+              for (i = 0; i < j; i++) {  // sliding rms is better
+                if (fstart + i * fstep >= freqstart && fstart + i * fstep <= freqstop) {
+                  a00 = a11 = a01 = b0 = b1 = 0;
+                  for (k = i - nn; k <= i + nn; k++) {
+                    if (k >= 0 && k < j && abs(k - i) > nn / 2) {
+                      f = fstart + k * fstep;
+                      a00 += wtt[k];
+                      a11 += wtt[k] * f * f;
+                      a01 += wtt[k] * f;
+                      b0 += wtt[k] * data2[k];
+                      b1 += wtt[k] * data2[k] * f;
                     }
                   }
+                  a10 = a01;
+                  d = a00 * a11 - a10 * a01;
+                  aa00 = a11 / d;
+                  aa10 = -a01 / d;
+                  aa01 = -a10 / d;
+                  aa11 = a00 / d;
+                  a = aa00 * b0 + aa01 * b1;  // constant
+                  b = aa10 * b0 + aa11 * b1;  // slope
+                  a00 = 0;
+                  a11 = 1e-99;
+                  for (k = i - nn; k <= i + nn; k++) {
+                    if (k >= 0 && k < j && abs(k - i) > nn / 2) {
+                      f = fstart + k * fstep;
+                      av = a + b * f;
+                      a00 += (data2[k] - av) * (data2[k] - av) * wtt[k];
+                      a11 += wtt[k];
+                    }
+                  }
+                  if (d) {
+                    f = fstart + i * fstep;
+                    av = a + b * f;
+                    rms = sqrt(a00 / a11);
+                    b = (data2[i] - av) / (fabs(rfi * 1.2) * rms);  // for rogue ns = 20 rfi = 2.5 scale up to 3.0
+                    if (b > 1)
+                      for (k = i - 1; k <= i + 1; k++) wtt[k] = 0;
+                    specm[i] = av;
+                    spec[i] = (data2[i] - av);
+                    specr[i] = wtt[i] * (data2[i] - av);
+                  }
                 }
-                zwtp = zwt;
-                m = 0;
-                for (i = 0; i < j; i++) {
-                  if (wtt[i] == 0 && fstart + i * fstep > freqstart && fstart + i * fstep < freqstop) { m++; }
-                }
-                zwt = m;
-                printf("%d zwt %d\n", j, zwt);
               }
+              zwtp = zwt;
+              m = 0;
               for (i = 0; i < j; i++) {
-                data2[i] = 0;
-                wttav[i] += nt * wtt[i];
-                specmav[i] += specm[i];
-                specav[i] += spec[i];
-                specrav[i] += specr[i];
+                if (wtt[i] == 0 && fstart + i * fstep > freqstart && fstart + i * fstep < freqstop) { m++; }
               }
-              nns = nt = 0;
+              zwt = m;
+              printf("%d zwt %d\n", j, zwt);
             }
-
             for (i = 0; i < j; i++) {
-              avdata[i] += wttt * data[i];
-              nndata[i] += wttt;
+              data2[i] = 0;
+              wttav[i] += nt * wtt[i];
+              specmav[i] += specm[i];
+              specav[i] += spec[i];
+              specrav[i] += specr[i];
             }
-            if (nstart > 0) nstart = -999;
-            if (water && nline == 0) {
-              waterspec(0, np, avdataw, dy, hr, mn, sc, wscalemax, wscalemin);
-              waterwrite(0, np, avdataw, yr, dy, hr, mn, sc, lst);
-            }
-            for (i = 0; i < nspec; i++) avdataw[i] += data[i];
-            avpkpwr += ppercent;
-            avsec += secs;
-            ndataw++;
-            a = ha;
-            if (dgha == 48) {
-              gha = a;
-              dgha = 24;
-            }  // needed to get correct ghamax and ghamin when using tstart tstop
-            if (a - gha > 12.0) a += -24.0;
-            if (a - gha < -12.0) a += 24.0;
-            ghav += a;
-            a = ha - gha;
-            if (a > 12.0) a += -24.0;
-            if (a <= -12.0) a += 24.0;
-            if (gha + a > ghamax) ghamax = gha + a;
-            if (gha + a < ghamin) ghamin = gha + a;
-            if (water && (nline % (water) == (water - 1) || peakpwr < 0)) {
-              waterwrite(1, np, avdataw, yr, dy, hr, mn, sc, lst);
-              waterspec(1, np, avdataw, dy, hr, mn, sc, wscalemax, wscalemin);
-            }
-            nline++;
+            nns = nt = 0;
           }
+
+          for (i = 0; i < j; i++) {
+            avdata[i] += wttt * data[i];
+            nndata[i] += wttt;
+          }
+          if (nstart > 0) nstart = -999;
+          if (water && nline == 0) {
+            waterspec(0, np, avdataw, dy, hr, mn, sc, wscalemax, wscalemin);
+            waterwrite(0, np, avdataw, yr, dy, hr, mn, sc, lst);
+          }
+          for (i = 0; i < nspec; i++) avdataw[i] += data[i];
+          avpkpwr += ppercent;
+          avsec += secs;
+          ndataw++;
+          a = ha;
+          if (dgha == 48) {
+            gha = a;
+            dgha = 24;
+          }  // needed to get correct ghamax and ghamin when using tstart tstop
+          if (a - gha > 12.0) a += -24.0;
+          if (a - gha < -12.0) a += 24.0;
+          ghav += a;
+          a = ha - gha;
+          if (a > 12.0) a += -24.0;
+          if (a <= -12.0) a += 24.0;
+          if (gha + a > ghamax) ghamax = gha + a;
+          if (gha + a < ghamin) ghamin = gha + a;
+          if (water && (nline % (water) == (water - 1) || peakpwr < 0)) {
+            waterwrite(1, np, avdataw, yr, dy, hr, mn, sc, lst);
+            waterspec(1, np, avdataw, dy, hr, mn, sc, wscalemax, wscalemin);
+          }
+          nline++;
+        } // if power/rms filters passed
+        else{
+          fprintf(timeflag_file, "%d %d %d %d %d %d\n", 
+            (ppercent < peakpwr && (ppercent > minpwr)), 
+            ((pkpwr < pkpwrm) || (pkpwr > fabs(pkpwrm) && pkpwrm < 0)),
+            d <= d150,
+            dload < dloadmax,
+            rrmsf < maxrmsf,
+            fmpwr < maxfm
+          );
         }
-        avpwr = avpwr / (j + 1e-99);
-        if (rrmsf < maxrmsf)
-          jj = 0;
-        else
-          jj = 1;
-        //        printf("line %4d t %d tot_pwr %6.3f sig_percnt %5.2f cyc_accepted %4d peak %3.0f dB ppmax %d adcov %3.1f swpos %d wttt %2.0f temp
-        //        %5.1f orbpwr2 %5.1f rmsf%d %5.1f\n",
-        //                       line, temp, avpwrt,100.0*avpwr2/avpwrt,nline,pkpwr,ppmax,adcov,swpos,wttt,tempr,orbpwr2,jj,rrmsf);
-        printf(
-            "line %4d t %d tot_pwr %6.3f sig_percnt %5.2f cyc_accepted %4d peak %3.0f dB ppmax %d adcov %3.1f swpos %d wttt %2.0f temp %5.1f fmpwr "
-            "%5.1f rmsf%d %5.1f\n",
-            line, temp, avpwrt, 100.0 * avpwr2 / avpwrt, nline, pkpwr, ppmax, adcov, swpos, wttt, tempr, fmpwr, jj, rrmsf);
-        np = j;
+      } // if swpos=2 and other swpos got through aux
+      else if (swpos == 2) {
+        fprintf(timeflag_file, "-1 -1 -1 -1 -1 -1\n");
       }
+      avpwr = avpwr / (j + 1e-99);
+      if (rrmsf < maxrmsf)
+        jj = 0;
       else
+        jj = 1;
+      //        printf("line %4d t %d tot_pwr %6.3f sig_percnt %5.2f cyc_accepted %4d peak %3.0f dB ppmax %d adcov %3.1f swpos %d wttt %2.0f temp
+      //        %5.1f orbpwr2 %5.1f rmsf%d %5.1f\n",
+      //                       line, temp, avpwrt,100.0*avpwr2/avpwrt,nline,pkpwr,ppmax,adcov,swpos,wttt,tempr,orbpwr2,jj,rrmsf);
       printf(
-                    "line %4d t %d tot_pwr %6.3f sig_percnt %2d cyc_accepted %4d peak %3.0f dB ppmax %d adcov %3.1f swpos %d wttt %2d temp %5.1f fmpwr "
-            "%5.1f rmsf%d %5.1f",
-            line, temp, avpwrt, 0, nline, pkpwr, ppmax, adcov, swpos, 0, tempr, fmpwr, jj, rrmsf);
-      if (j == 0) printf("\n");
+          "line %4d t %d tot_pwr %6.3f sig_percnt %5.2f cyc_accepted %4d peak %3.0f dB ppmax %d adcov %4.2f swpos %d wttt %2.0f temp %5.1f fmpwr "
+          "%5.1f rmsf%d %5.1f\n",
+          line, temp, avpwrt, 100.0 * avpwr2 / avpwrt, nline, pkpwr, ppmax, adcov, swpos, wttt, tempr, fmpwr, jj, rrmsf);
+      np = j;
+    } // endif aux filters passed
+    else
+    {
+      printf(
+        "line %4d t %d tot_pwr %6.3f sig_percnt %2d cyc_accepted %4d peak %3.0f dB "
+        "ppmax %d adcov %4.2f swpos %d wttt %2d temp %5.1f fmpwr "
+        "%5.1f rmsf%d %5.1f",
+        line, temp, avpwrt, 0, nline, pkpwr, ppmax, adcov, swpos, 0, tempr, fmpwr, jj, rrmsf
+      );
+      if(swpos == 2) fprintf(timeflag_file, "-1 -1 -1 -1 -1 -1\n");
     }
-  }
+    if (j == 0) printf("\n");
+  
+  } // while loop over lines in ACQ file
   fclose(file1);
+  fclose(timeflag_file);
+
   if (!np) return 0;
-  if (nt) {
+  if (nt) { // this is not done for the 2018 Nature paper (i.e. nt=0)
     zwt = 1;
     zwtp = 0;
     for (i = 0; i < np; i++) wtt[i] = 1;
@@ -624,10 +681,12 @@ int main(int argc, char *argv[]) {
     nns = nt = 0;
   }
 
-  printf("np %d avdata[0] %f\n", np, avdata[0]);
+  file1 = fopen("avg_temp_and_nsamples.txt", "w");
   for (m = 0; m < np; m++) {
     data[m] = avdata[m] / nndata[m];
-    if (ns > 0) {
+    fprintf(file1, "%f %f %f %f\n", fstart + m * fstep, avdata[m], nndata[m], data[m]);
+
+    if (ns > 0) { // not done in B18 (i.e. ns=0)
       data[m] = specmav[m] / ntt;
       if (wttav[m]) data[m] += specrav[m] / wttav[m];
       //          if(wttav[m] == ntt) wtts[m] = 1; else{
@@ -642,10 +701,12 @@ int main(int argc, char *argv[]) {
     if (wwd) data[m] = ((avd0[m] - avd1[m]) / (avd2[m] - avd1[m])) * tcal + tload;
     if (recom) data[m] = ((avd0[m]) / avd0[np / 2]) * tcal + tload;
   }
+  fclose(file1);
+
   j = k = 0;
   fstart0 = freqstart;
   fstop0 = freqstop;
-  for (i = 0; i < np; i++) {
+  for (i = 0; i < np; i++) { // this is just setting the used frequency data to the front of the array
     f = fstart + i * fstep;
     if (f >= fstart0 && f <= fstop0) {
       if (k == 0) k = i;
@@ -669,8 +730,10 @@ int main(int argc, char *argv[]) {
       wtt[i] = 0;
   }
 
-  if (pfit) {
-    if (fabs(rfi) > 0.0) {
+  if (pfit) { // this IS done for B18 (pfit=37)
+    if (fabs(rfi) > 0.0) { // rfi = 2.5 for B18
+      file1 = fopen("initial_fourier_model.txt", "w");
+
       zwt = 1;
       zwtp = 0;
       for (i = 0; i < np; i++)
@@ -678,6 +741,19 @@ int main(int argc, char *argv[]) {
       for (j = 0; j < 100 && zwt > zwtp; j++) {
         tav = polyfit(pfit, np, data, mcalc, wtt, dataout, fmode);
         rmss = rmscalc(np, dataout, wtt);
+
+        if (j == 0){
+          for(i=0;i<np;i++){
+            fprintf(file1, "%f %f\n", fstart + i * fstep, dataout[i]);
+          }
+        }
+        float rmsmax = 0;
+        float rmsmin = 0;
+        float resmax = 0;
+        float resmin = 0;
+        float zmax = 0;
+        float zmin = 0;
+
         for (i = 0; i < np; i++) {  // sliding rms is better
           a = 0;
           b = 1e-99;
@@ -709,6 +785,12 @@ int main(int argc, char *argv[]) {
             if (b > 100 && nrfi && i + nrfi * 4 < np && i - nrfi * 4 >= 0)
               for (k = 0; k <= nrfi * 4; k++) wtt[i + k] = wtt[i - k] = 0;
           }
+          if(b*rfi < zmin) zmin = b*rfi;
+          if(b*rfi > zmax) zmax = b*rfi;
+          if(dataout[i] < resmin) resmin = dataout[i];
+          if(dataout[i] > resmax) resmax = dataout[i];
+          if(rms < rmsmin) rmsmin = rms;
+          if(rms > rmsmax) rmsmax = rms;
         }
         zwtp = zwt;
         m = 0;
@@ -721,7 +803,7 @@ int main(int argc, char *argv[]) {
           if (fstart + i * fstep > freqstart && fstart + i * fstep < freqstop) m++;
         }
         nnp = m;
-        printf("%d rms %f zwt %d m %d np %d\n", j, rms, zwt, m, np);
+        printf("%d rms %f zwt %d res %f %f z %f %f rms %f %f\n", j, rms, zwt, m, np, resmin, resmax, zmin, zmax, rmsmin, rmsmax);
       }
     }
     tav = polyfit(pfit, np, data, mcalc, wtt, dataout, fmode);
@@ -1340,15 +1422,17 @@ double polyfit(int npoly, int nfreq, double ddata[], double mcalc[], double wtt[
   double re, max, dd;
   static long double aarr[100000], arrr[100000];
   static double bbrr[10000];
+  short write = 1;
+
   for (i = 0; i < nfreq; i++) {
     kk = i * npoly;
     for (j = 0; j < npoly; j++) {
       mcalc[kk] = fitfun(i, j, mode);
       kk++;
     }
-    //      if(i > nfreq/10 && i < nfreq*9/10) wtt[i] = 1; else wtt[i] = 0;
-    //        wtt[i]=1;
+    if (wtt[i]==0) write = 0;
   }
+
   for (i = 0; i < npoly; i++) {
     re = 0.0;
     m1 = i;
@@ -1404,6 +1488,12 @@ double polyfit(int npoly, int nfreq, double ddata[], double mcalc[], double wtt[
     //        printf("ddata %f %f\n", ddata[i], re);
   }
   //    return pow(10.0,bbrr[0]);
+  if(write){
+    FILE *file = fopen("polyfit.txt", "w");
+    for (i = 0; i < npoly; i++) {
+      fprintf(file, "%g\n", bbrr[i]);
+    }  
+  }
   return bbrr[0];
 }
 

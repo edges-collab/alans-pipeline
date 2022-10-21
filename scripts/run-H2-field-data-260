@@ -7,10 +7,10 @@ set refresh_spectra = 1  # 2 for definitely don't, 0 for auto, 1 for definitely 
 
 set refresh_calspec = 1  # 2 for definitely don't, 0 for auto, 1 for definitely do.
 
-set first_day_read = 616
-set first_day_cal = 616  # make it 616 if you want to include all days in the cal
+set first_day_read = 626
+set first_day_cal = 626  # make it 616 if you want to include all days in the cal
 
-set last_day = 830
+set last_day = 626
 
 # First, we read all the field spectra and average them.
 set day = $first_day_read
@@ -34,8 +34,9 @@ if ($refresh_spectra < 2) then
             echo Reading/Averaging $year\_$day2 to $outfile
             if($year == 2015) continue
             if($year == 2016 || $year == 2017) cat $field_spectra_dir/$year/$year\_$day2* >>! temp_20
-
-            ../bin/acqplot7amoon temp_20 -gha 12 -dgha 6 -rfi 2.5 -tcal 1000 -pfit 37 -fstart 40 -fstop 100 -smooth 8 -pkpwrm 40 -peakpwr 3 -minpwr 0.7 -nrfi 4 -dloadmax 1000 -adcov 0.4 -maxrmsf 200 -maxfm 200  >>! temp
+            rm temp
+            
+            ../bin/acqplot7amoon temp_20 -gha 12 -dgha 6 -rfi 2.5 -tcal 1000 -pfit 37 -fstart 40 -fstop 100 -smooth 0 -pkpwrm 40 -peakpwr 3 -minpwr 0.7 -nrfi 4 -dloadmax 1000 -adcov 0.4 -maxrmsf 200 -maxfm 200  >>! temp
 
             mv spe.txt $outfile
             mv time_flags.txt $results/time_flags_$day.txt
