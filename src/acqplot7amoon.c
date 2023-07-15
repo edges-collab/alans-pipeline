@@ -1388,6 +1388,10 @@ void dsmooth(int np, int n, double data[], double wt[])
 */
 
 void dsmooth(int np, int n, double data[], double wt[]) {
+  FILE *smoothed_weights = fopen("smoothed_weights.txt", "w");
+  FILE *smoothed_weights_thresh = fopen("smoothed_weights_thresh.txt", "w");
+  FILE *smoothed_weights_dec = fopen("smoothed_weights_decimated.txt", "w");
+
   double a, b, c, dd, fre, w;
   int i, j, k;
   dd = 2.0 / n;
@@ -1404,17 +1408,26 @@ void dsmooth(int np, int n, double data[], double wt[]) {
         b += w * data[k];
       }
     }
-    if (a > n / 4.0)
+    fprintf(smoothed_weights, "%e\n",a);
+
+    if (a > n / 4.0){
       mcalc[i] = b / a;  // prevents smoothed freq with only a few freqs  n/4 best?
-    else {
+      fprintf(smoothed_weights_thresh, "%e\n",a);
+    } else {
       mcalc[i] = data[i];
       mcalc[i + np] = 0;
+      fprintf(smoothed_weights_thresh, "%e\n",0.0);
     }
   }
   for (i = 0; i < np; i++) {
     if (wt[i] > 0.0) data[i] = mcalc[i];
     wt[i] = mcalc[i + np];
   }
+
+  for (j = 0; j < np; j += smooth) {    
+    fprintf(smoothed_weights_dec, "%e\n", wt[j]);
+  }
+
 }
 
 double polyfit(int npoly, int nfreq, double ddata[], double mcalc[], double wtt[], double dataout[], int mode) {

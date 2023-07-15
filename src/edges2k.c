@@ -626,6 +626,7 @@ int main(int argc, char *argv[]) {
   for (j = 0; j < ns11amb; j++) s11amb[j] = s11amb[j] * cexp(-2.0 * PI * freqs11amb[j] * 1e6 * (delaycorr)*I) * pow(10.0, 0.05 * dbcorr);
   for (j = 0; j < ns11cab1; j++) s11cab1[j] = s11cab1[j] * cexp(-2.0 * PI * freqs11cab1[j] * 1e6 * (delaycorr)*I) * pow(10.0, 0.05 * dbcorr);
   for (j = 0; j < ns11cab2; j++) s11cab2[j] = s11cab2[j] * cexp(-2.0 * PI * freqs11cab2[j] * 1e6 * (delaycorr)*I) * pow(10.0, 0.05 * dbcorr);
+  printf("GOT YEAR: %d %d %d %d %d\n", yr, dy, hr, mn, sc);
   if (yr)
     secs = tosecs(yr, dy, hr, mn, sc);
   else
@@ -961,6 +962,7 @@ int main(int argc, char *argv[]) {
         skymodel[i] =
             beamcorr(freqant[i] * (1.0 + low), bfit, antaz, secs, mcalc, fitf, aarr, bbrr, 0, 0, &lst, bb, &bspac, cmb, &freqref, 0, 0, site, map) *
             pow(1.0 / (1.0 + low), -2.5);
+        printf("freqref outside: %f\n", freqref);
         refsky = 
             beamcorr(freqref, bfit, antaz, secs, mcalc, fitf, aarr, bbrr, 0, 0, &lst, bb, &bspac, cmb, &freqref, 0, 0, site, map) *
             pow(freqant[i] / freqref, -2.5);
@@ -1964,6 +1966,7 @@ double beamcorr(double freq, int bfit, double ang, double secs, double mcalc[], 
         if (az < 0) az += 360;
         if (az < 0) az += 360;
         if (az >= 360) az -= 360;
+
         while (j < 91 && p && *p != '\n') {
           azel[(az + j * 360) * NBEAM + i] = pow(10.0, 0.1 * strtod(p, &p));
           //                           printf("az %d el %d fr %d amp
@@ -2040,6 +2043,7 @@ double beamcorr(double freq, int bfit, double ang, double secs, double mcalc[], 
       i++;
     }
     fclose(file3);
+    printf("MAP: %d, SITE %d\n", map, site);
     if (map >= 2) {
       if (map == 2)
         if ((file3 = fopen("/home/aeer/fits/45mhz.txt", "r")) == NULL) { return 0; }
@@ -2161,7 +2165,9 @@ double beamcorr(double freq, int bfit, double ang, double secs, double mcalc[], 
       if (fabs(frqst + frq * frqspac - (*freqref)) < k) {
         k = fabs(frqst + frq * frqspac - (*freqref));
         frq150 = frq;
+        printf("%f %d\n", frqst + frq * frqspac, frq150);
       }  // find closest
+    printf("REFERENCE FREQ: %f %d\n", frqst + frq150 * frqspac, frq150);
     for (i = 0; i < 512; i++) {
       glat = (i - 256.0) * 90.0 / 256.0;
       for (j = 0; j < 1024; j++) {
@@ -2176,6 +2182,7 @@ double beamcorr(double freq, int bfit, double ang, double secs, double mcalc[], 
     nn = integ / 1800 + 1;  // averaging over 3600 sec makes little difference to result
                             //    nn = integ/900 + 1; // made a small difference
     d = (double)integ / (double)nn;
+    printf("USING secs = %f, dsec = %f, nn=%d\n", secs, d, nn);
 
     for (n = 0; n < nn; n++) {
       ssecs = secs + d / 2.0 + n * d - ((double)integ) / 2.0;
@@ -2189,9 +2196,17 @@ double beamcorr(double freq, int bfit, double ang, double secs, double mcalc[], 
       if (*lst > 24.0) *lst -= 24.0;
       toyrday(ssecs, &yr, &dy, &hr, &mn, &sc);
       printf(
-          "Spsecs %10.0f %4d:%03d:%02d:%02d:%02d sunaz %6.2f sunel %6.2f lst "
-          "%6.2f gha %6.2f\n",
+          "Spsecs %.3f %4d:%03d:%02d:%02d:%02d sunaz %6.2f sunel %6.2f lst "
+          "%.6f gha %6.2f\n",
           ssecs, yr, dy, hr, mn, sc, sunaz, sunel, *lst, *lst - (17.0 + 45.67 / 60.0));
+      printf("skymode & 128: %d\n", skymode & 128);
+      
+      sprintf(name, "skymap%d.txt",n);
+      file3 = fopen(name, "w");
+      fprintf(file3, "az el wsum amp amp150 wsum2 iaz iel sang\n");
+
+
+      
       for (i = 0; i < 512; i += 1) {
         glat = (i - 256.0) * 90.0 / 256.0;
         sang = (180.0 / 512.0) * cos(glat * PI / 180.0) * (360.0 / 1024.0) * PI * PI / (180.0 * 180.0);
@@ -2206,6 +2221,7 @@ double beamcorr(double freq, int bfit, double ang, double secs, double mcalc[], 
             gp = -0.12 * log(fr / 150.0);  // derivative Angelica's gamma
           else
             gp = 0.0;
+          if (i==0 && frq==0 && skymode & 128) printf("dp=%f gp=%f\n",dp,gp);
           if ((map == 0) && skymode & 128) poww[frq] = pow(fr / 408.0, -2.5 + dp + gp);
           if ((map == 1) && skymode & 128) poww[frq] = pow(fr / 45.0, -2.5 + dp + gp);
         }
@@ -2221,7 +2237,8 @@ double beamcorr(double freq, int bfit, double ang, double secs, double mcalc[], 
           iaz = azz + 0.5;
           iel = el + 0.5;
           if (iaz < 0) iaz = 0;
-          if (iaz > 359) iaz = 359;
+          // if (iaz > 359) iaz = 359; SGM -- this is wrong, it should wrap around.
+          if (iaz > 359) iaz -= 360;
           if (iel > 90) iel = 90;
           // frq150 = 1;  // choice makes no difference
           amp150 = sang * azel[(iaz + iel * 360) * NBEAM + frq150];
@@ -2283,12 +2300,25 @@ double beamcorr(double freq, int bfit, double ang, double secs, double mcalc[], 
             } else
               wsum = 300.0;
             if (wsum > max) max = wsum;
+            if (frq==0){
+              fprintf(file3, "%.15e %.15e %.15e %.15e %.15e %.15e %d %d %.15e\n", azz, el, wsum, amp, amp150, wsum2, iaz, iel, sang);
+            }
             fsum[frq] += amp * (wsum + wsum2);
             fsum1[frq] += amp;
             fsum2[frq] += amp150 * wsum;
+            
           }
         }
       }
+      fclose(file3);
+
+      sprintf(name, "beamfac%d.txt",n);
+      file3 = fopen(name, "w");
+      fprintf(file3, "frq bwfg bm bwfg_ref\n");
+      for(frq=0;frq<nbeam;frq++){
+        fprintf(file3, "%f %f %f\n", fsum[frq], fsum1[frq], fsum2[frq]);
+      }
+      fclose(file3);
     }
     //   if(nbeam > NFIT) bfit = NFIT;   // 30 needed when azelq spacing is 2
     //   MHz

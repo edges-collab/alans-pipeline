@@ -36,7 +36,7 @@ if ($refresh_spectra < 2) then
             if($year == 2016 || $year == 2017) cat $field_spectra_dir/$year/$year\_$day2* >>! temp_20
             rm temp
             
-            ../bin/acqplot7amoon temp_20 -gha 12 -dgha 6 -rfi 2.5 -tcal 1000 -pfit 37 -fstart 40 -fstop 100 -smooth 0 -pkpwrm 40 -peakpwr 3 -minpwr 0.7 -nrfi 4 -dloadmax 1000 -adcov 0.4 -maxrmsf 200 -maxfm 200  >>! temp
+            ../bin/acqplot7amoon temp_20 -gha 12 -dgha 6 -rfi 2.5 -tcal 1000 -pfit 37 -fstart 40 -fstop 100 -smooth 8 -pkpwrm 40 -peakpwr 3 -minpwr 0.7 -nrfi 4 -dloadmax 1000 -adcov 0.4 -maxrmsf 200 -maxfm 200  >>! temp
 
             mv spe.txt $outfile
             mv time_flags.txt $results/time_flags_$day.txt
