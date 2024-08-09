@@ -682,23 +682,42 @@ int main(int argc, char *argv[]) {
       fittp(ns11rig, freqs11rig, s22rig, wttrig, namb, freqamb, ss22rig, nfit2, fitf, mcalc, aarr, bbrr, 9, -1, rigfname);
     }
 
+    // SGM: added for cross-checks
     FILE *s11file;
-    s11file = fopen("all_modeled_s11s.txt", "w");
-    fprintf(s11file, "# freq, re(lna), im(lna), re(amb), im(amb), re(hot), im(hot), re(open), im(open), re(short), im(short), re(sr_s11), im(sr_s11_, re(sr_s12), im(sr_s12), re(sr_s22_, im(sr_s22)\n");
-    for (i=0; i < namb; i++){
-      fprintf(s11file, "%f %e %e %e %e %e %e %e %e %e %e %e %e %e %e %e %e\n",
-        freqamb[i], 
-        creal(ss11lna[i]), cimag(ss11lna[i]),
+    s11file = fopen("s11_modelled.txt", "w");
+    fprintf(s11file, "# freq, amb_real amb_imag hot_real hot_imag open_real open_imag short_real short_imag lna_real lna_imag rig_s11_real rig_s11_imag rig_s12_real rig_s12_imag rig_s22_real rig_s22_imag\n");
+    for(i=0;i<namb;i++){
+      fprintf(s11file, "%1.12e %1.12e %1.12e %1.12e %1.12e %1.12e %1.12e %1.12e %1.12e %1.12e %1.12e %1.12e %1.12e %1.12e %1.12e %1.12e %1.12e\n", 
+        freqhot[i],  
         creal(ss11amb[i]), cimag(ss11amb[i]),
         creal(ss11hot[i]), cimag(ss11hot[i]),
         creal(ss11cab[i]), cimag(ss11cab[i]),
-        creal(ss11cab[namb+i]), cimag(ss11cab[namb+i]),
+        creal(ss11cab[namb + i]), cimag(ss11cab[namb + i]),
+        creal(ss11lna[i]), cimag(ss11lna[i]),
         creal(ss11rig[i]), cimag(ss11rig[i]),
         creal(ss12rig[i]), cimag(ss12rig[i]),
         creal(ss22rig[i]), cimag(ss22rig[i])
       );
     }
     fclose(s11file);
+
+    // FILE *s11file;
+    // s11file = fopen("all_modeled_s11s.txt", "w");
+    // fprintf(s11file, "# freq, re(lna), im(lna), re(amb), im(amb), re(hot), im(hot), re(open), im(open), re(short), im(short), re(sr_s11), im(sr_s11_, re(sr_s12), im(sr_s12), re(sr_s22_, im(sr_s22)\n");
+    // for (i=0; i < namb; i++){
+    //   fprintf(s11file, "%f %e %e %e %e %e %e %e %e %e %e %e %e %e %e %e %e\n",
+    //     freqamb[i], 
+    //     creal(ss11lna[i]), cimag(ss11lna[i]),
+    //     creal(ss11amb[i]), cimag(ss11amb[i]),
+    //     creal(ss11hot[i]), cimag(ss11hot[i]),
+    //     creal(ss11cab[i]), cimag(ss11cab[i]),
+    //     creal(ss11cab[namb+i]), cimag(ss11cab[namb+i]),
+    //     creal(ss11rig[i]), cimag(ss11rig[i]),
+    //     creal(ss12rig[i]), cimag(ss12rig[i]),
+    //     creal(ss22rig[i]), cimag(ss22rig[i])
+    //   );
+    // }
+    // fclose(s11file);
 
     if (!nopen) {
       for (i = 0; i < namb; i++) {
@@ -836,6 +855,11 @@ int main(int argc, char *argv[]) {
     outcal(namb, freqamb, ss11lna, tcal_scasm, tcal_ofssm, tlna0, tlna1, tlna2, wtcal, "cal_data");
     cal = 1;
 
+    FILE *LOSS_FILE;
+    LOSS_FILE = fopen("hot_load_loss.txt", "w");
+
+    fprintf(LOSS_FILE, "# freq, loss\n");
+  
     for (i = 0; i < namb; i++) {
       data[i] = thot;
       ssphot[i] = (sphot[i] - tamb) * tcal_scasm[i] + tamb - tcal_ofssm[i];
@@ -845,8 +869,10 @@ int main(int argc, char *argv[]) {
                                     0);  // mode = 0 for cable + adapter
       if (Lh == -2) Lhh = rigloss(ss11hot[i], ss11rig[i], ss12rig[i],
                                   ss22rig[i]);  // rigid cable loss
+      fprintf(LOSS_FILE, "%1.12e %1.12e\n", freqhot[i], Lhh);
       dataout[i] = lossinv(s2, tcold, Lhh);     // note tcold
     }
+    fclose(LOSS_FILE);
     plotfspec(namb, freqhot, dataout, data, wtcal, dscale, 0, 1, hottitle, hotfile, info);
 
     for (i = 0; i < namb; i++) {
@@ -915,6 +941,8 @@ int main(int argc, char *argv[]) {
   fprintf(lossfile, "# freq, loss, tloss [(1 - loss)*Tant]\n");
   fprintf(beamcorrfile, "# freq, skymodel, refskymodel, beamcorr\n");
 
+  printf("WTANT JUST BEFORE LOSS/BEAM: %e\n", wtant[0]);
+
   for (i = 0; i < nant; i++) {
     sspant[i] = (spant[i] - tamb) * tcal_scasm[i] + tamb - tcal_ofssm[i];
     //   if(freqant[i] < wfstart || freqant[i] > wfstop || wtcal[i] == 0)
@@ -962,7 +990,6 @@ int main(int argc, char *argv[]) {
         skymodel[i] =
             beamcorr(freqant[i] * (1.0 + low), bfit, antaz, secs, mcalc, fitf, aarr, bbrr, 0, 0, &lst, bb, &bspac, cmb, &freqref, 0, 0, site, map) *
             pow(1.0 / (1.0 + low), -2.5);
-        printf("freqref outside: %f\n", freqref);
         refsky = 
             beamcorr(freqref, bfit, antaz, secs, mcalc, fitf, aarr, bbrr, 0, 0, &lst, bb, &bspac, cmb, &freqref, 0, 0, site, map) *
             pow(freqant[i] / freqref, -2.5);
@@ -1169,6 +1196,16 @@ int main(int argc, char *argv[]) {
   fclose(ants11file);
 
   if (smooth) {
+    FILE *smoothinputfile;
+    smoothinputfile = fopen("second_smooth_input.txt", "w");
+    fprintf(smoothinputfile, "# freq, data, model, wt\n");
+    for (i=0; i < nant; i++){
+      fprintf(smoothinputfile, "%f %e %e %e\n",
+        freqant[i], 
+        dataout[i], dataout2[i], wtant[i]
+      );
+    }
+    fclose(smoothinputfile);
     dsmooth(nant, dataout, dataout2, wtant, mcalc, fabs(smooth));
     if (smooth < 0) {
       j = 0;
@@ -1177,6 +1214,7 @@ int main(int argc, char *argv[]) {
         wtemp[j] = 0;
         for (k = j * kk - kk / 2; k <= j * kk + kk / 2; k++)
           if (k >= 0 && k < nant && wtant[k]) wtemp[j] = 1;
+
         dataout[j] = dataout[i];
         freqant[j] = freqant[i];
         mcalc[j] = mcalc[i];
@@ -1188,6 +1226,18 @@ int main(int argc, char *argv[]) {
     }
   } else
     for (i = 0; i < nant; i++) mcalc[i] = dataout[i];
+  
+  FILE *smoothoutputfile;
+  smoothoutputfile = fopen("second_smooth_output.txt", "w");
+  fprintf(smoothoutputfile, "# freq, data, model, wt\n");
+  for (i=0; i < nant; i++){
+    fprintf(smoothoutputfile, "%e %e %e %e\n",
+      freqant[i], 
+      mcalc[i], dataout2[i], wtant[i]
+    );
+  }
+  fclose(smoothoutputfile);
+
   rms1 = rms2 = rms3 = rmscalc(nant, mcalc, dataout2, wtant);
   if (smooth) rms3 = rms3 * sqrt(fabs(smooth));
   if (eorwid > 0.0 && cmb & 32) {
@@ -1255,6 +1305,7 @@ void wavefit(int nopen, int nshort, int wfit, double spopen[], double wtopen[], 
   rms = 0;
   min = 1e99;
   bdly = 0;
+  
   for (iter = 0; iter < 2; iter++) {
     if (iter == 0)
       dd = 10e-9;
@@ -1354,9 +1405,16 @@ void fittp(int np, double freqq2[], complex double s11[], double wtt[], int npou
     }
     printf("Sp delay for mode %d: %e\n", mode, delay);
   }
-  i1 = 0;
-  for (i = 0; i < np && i1 == 0; i++)
-    if (wtt[i]) i1 = i;
+
+  // SGM: modified the next two lines to start with i1 = -1 -- otherwise you always
+  //      get at least i1=1 (not zero), which means you never fit down to the lowest
+  //      frequency.
+  // i1 = 0;
+  // for(i=0;i<np && i1==0;i++) if(wtt[i]) i1=i;
+  i1 = -1;
+  for(i=0;i<np && i1==-1;i++) if(wtt[i]) i1=i;
+  // SGM: END ADDITION
+
   i2 = 0;
   for (i = np - 1; i >= 0 && i2 == 0; i--)
     if (wtt[i]) i2 = i;
@@ -1367,6 +1425,9 @@ void fittp(int np, double freqq2[], complex double s11[], double wtt[], int npou
     return;
   }
   fcen = (freqq2[i2] + f0) * 0.5;  // fixed 25sep15 now O.K. to nfit4 = 10
+  
+
+  
   for (j = 0; j < nfit; j++) {
     for (i = 0; i < np; i++) {
       if ((nfit > 16)  | (model == 0)) {  // changed 13dec17 to 14 7aug18 to 16 20aug18
@@ -2165,7 +2226,6 @@ double beamcorr(double freq, int bfit, double ang, double secs, double mcalc[], 
       if (fabs(frqst + frq * frqspac - (*freqref)) < k) {
         k = fabs(frqst + frq * frqspac - (*freqref));
         frq150 = frq;
-        printf("%f %d\n", frqst + frq * frqspac, frq150);
       }  // find closest
     printf("REFERENCE FREQ: %f %d\n", frqst + frq150 * frqspac, frq150);
     for (i = 0; i < 512; i++) {
@@ -2199,7 +2259,6 @@ double beamcorr(double freq, int bfit, double ang, double secs, double mcalc[], 
           "Spsecs %.3f %4d:%03d:%02d:%02d:%02d sunaz %6.2f sunel %6.2f lst "
           "%.6f gha %6.2f\n",
           ssecs, yr, dy, hr, mn, sc, sunaz, sunel, *lst, *lst - (17.0 + 45.67 / 60.0));
-      printf("skymode & 128: %d\n", skymode & 128);
       
       sprintf(name, "skymap%d.txt",n);
       file3 = fopen(name, "w");
@@ -2221,7 +2280,7 @@ double beamcorr(double freq, int bfit, double ang, double secs, double mcalc[], 
             gp = -0.12 * log(fr / 150.0);  // derivative Angelica's gamma
           else
             gp = 0.0;
-          if (i==0 && frq==0 && skymode & 128) printf("dp=%f gp=%f\n",dp,gp);
+          
           if ((map == 0) && skymode & 128) poww[frq] = pow(fr / 408.0, -2.5 + dp + gp);
           if ((map == 1) && skymode & 128) poww[frq] = pow(fr / 45.0, -2.5 + dp + gp);
         }
@@ -3164,8 +3223,8 @@ void outcal(int np, double freqq[], complex double s11lna[], double sca[], doubl
 
   for (k = 0; k < np; k++) {
     fprintf(file,
-            "freq %10.6f s11lna %10.6f %10.6f sca %10.6f ofs %10.6f tlnau "
-            "%10.6f tlnac %10.6f tlnas %10.6f wtcal %1.0f %s\n",
+            "freq %1.16e s11lna %1.16e %1.16e sca %1.16e ofs %1.16e tlnau "
+            "%1.16e tlnac %1.16e tlnas %1.16e wtcal %1.0f %s\n",
             freqq[k], creal(s11lna[k]), cimag(s11lna[k]), sca[k], ofs[k], tlnau[k], tlnacc[k], tlnacs[k], wtcal[k], title);
   }
   fclose(file);

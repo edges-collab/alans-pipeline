@@ -89,7 +89,7 @@ end
 rm specal.txt
 rm azelq.txt
 
-# Perform the averaged over days
+# Perform the average over days
 ../bin/longav spesum2.txt  -lim 0.17 -nfit 5  -dmax 0.5  -fstart 51 -fstop 99 -schk 0 -tchk 200 -rfi 1.9 -g10  -date -seor -1 -tau 7 -sig 0 -md 1 -out 3
 set datestr=`date +"%Y-%m-%d_%H-%M"`
 cp spesum2.txt $results/spesum2_${datestr}.txt
