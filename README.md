@@ -55,15 +55,20 @@ in `bin/`. Make sure to create a 'bin/' directory before running 'make'.
 
 ## Re-creating the H2 case.
 
-To re-create the H2 case, you should `cd scripts/`, then first run
+To re-create the H2 case, first run `make` in the top-level directory to make the 
+binaries. Then:
 
-    $ csh dofinalcase2cal_forniv
+    $ cd scripts
+    $ ./run-H2-cal
 
-The primary output of this script is `scripts/H2Case/specal.txt`,
-which should correspond *exactly* to `results/specal_final_case2.txt`.
+Ensure that the `use_fittp_fix` option is set to `0` to exactly reproduce the B18 results.
+The resulting `specal.txt` file from that run will be saved in `scripts/H2Case/specal.txt`.
+To check that this file is exactly the same as that used in B18, run the `compare_h2cal_outputs.ipynb`
+notebook, which prints the maximum difference between that file and the `results/specal_final_case2.txt`
+file, which was directly provided by Alan.
 
-Then run
+Following this, run
 
-    $ csh dofinalcase2_forniv
+    $ ./run-H2-field-data
 
-which will produce...
+which will do the data averaging and calibration.

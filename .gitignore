@@ -54,6 +54,7 @@ dkms.conf
 
 # Results from scripts
 scripts/H2Case/
+scripts/H2Case-fittpfix/
 scripts/EdgesCalComp/
 scripts/*.txt
 *~

@@ -1388,13 +1388,16 @@ void fittp(int np, double freqq2[], complex double s11[], double wtt[], int npou
     printf("Sp delay for mode %d: %e\n", mode, delay);
   }
 
+#ifdef FITTP_FIX  
   // SGM: modified the next two lines to start with i1 = -1 -- otherwise you always
   //      get at least i1=1 (not zero), which means you never fit down to the lowest
   //      frequency.
-  // i1 = 0;
-  // for(i=0;i<np && i1==0;i++) if(wtt[i]) i1=i;
   i1 = -1;
   for(i=0;i<np && i1==-1;i++) if(wtt[i]) i1=i;
+#else
+  i1 = 0;
+  for(i=0;i<np && i1==0;i++) if(wtt[i]) i1=i;
+#endif  
   // SGM: END ADDITION
 
   i2 = 0;
