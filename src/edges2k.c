@@ -701,24 +701,6 @@ int main(int argc, char *argv[]) {
     }
     fclose(s11file);
 
-    // FILE *s11file;
-    // s11file = fopen("all_modeled_s11s.txt", "w");
-    // fprintf(s11file, "# freq, re(lna), im(lna), re(amb), im(amb), re(hot), im(hot), re(open), im(open), re(short), im(short), re(sr_s11), im(sr_s11_, re(sr_s12), im(sr_s12), re(sr_s22_, im(sr_s22)\n");
-    // for (i=0; i < namb; i++){
-    //   fprintf(s11file, "%f %e %e %e %e %e %e %e %e %e %e %e %e %e %e %e %e\n",
-    //     freqamb[i], 
-    //     creal(ss11lna[i]), cimag(ss11lna[i]),
-    //     creal(ss11amb[i]), cimag(ss11amb[i]),
-    //     creal(ss11hot[i]), cimag(ss11hot[i]),
-    //     creal(ss11cab[i]), cimag(ss11cab[i]),
-    //     creal(ss11cab[namb+i]), cimag(ss11cab[namb+i]),
-    //     creal(ss11rig[i]), cimag(ss11rig[i]),
-    //     creal(ss12rig[i]), cimag(ss12rig[i]),
-    //     creal(ss22rig[i]), cimag(ss22rig[i])
-    //   );
-    // }
-    // fclose(s11file);
-
     if (!nopen) {
       for (i = 0; i < namb; i++) {
         ss11cab[i] = ss11cab[i + namb];
