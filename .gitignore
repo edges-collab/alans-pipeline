@@ -53,11 +53,18 @@ dkms.conf
 
 
 # Results from scripts
-scripts/H2Case/
-scripts/EdgesCalComp/
+beamcorr*.txt
+final_average*.txt
+specal_*.txt
+specavg*.txt
+spegva*.txt
+spesum2*.txt
+time_flags*.txt
 scripts/*.txt
 *~
 *.log
 *.pos
 bin/
 scripts/temp*
+.ipynb_checkpoints/
+*.acq

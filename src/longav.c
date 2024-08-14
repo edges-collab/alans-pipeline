@@ -154,7 +154,7 @@ int main(int argc, char *argv[]) {
       frqp = frq;
       freq[i + j * NDATA] = frq;
       if (frq < fstart || frq > fstop) wt = 0;
-      if (sim) {
+      if (sim) { // not done for B18
         spe = sim * 300.0 * pow(frq / 150, -2.6 + 0.1 * log(frq / 50) + 0.0 * pow(log(frq / 75), 2.0)) * exp(-2e-2 * 150.0 * 150.0 / (frq * frq)) +
               2.0e-2 * 3e3 * pow(frq / 150, -2.0);
         //          if(sim) {spe = sim *
@@ -162,10 +162,11 @@ int main(int argc, char *argv[]) {
         //                   spe += sim *
         //                   300.0*pow(frq/150,-2.6+0.3*log(frq/50)+0.1*pow(log(frq/75),2.0))*exp(-2e-2*150.0*150.0/(frq*frq))+2.0e-2*3e3*pow(frq/150,-2.0);
       }
+      // Neither of the following done for B18
       if (eora && (sig % 10) == 0) spe += -eora * exp(-0.693 * (frq - feor) * (frq - feor) / (wid * wid * 0.25));  // negative for absorption
       if (aeora && (sig % 10) == 0) spe += -aeora * agauss(frq, feor, wid);                                        // negative for absorption
       //          if(test) spe += -test*(1-exp(-flt*exp(-0.693*(frq-feor)*(frq-feor)/(wid*wid*0.25))));  // test positive for absorption
-      if (test)
+      if (test) // not done for B18
         spe += -test * (1 - exp(-tau * exp(-(frq - feor) * (frq - feor) * (-log(-log((1 + exp(-tau)) / 2) / tau)) / (wid * wid * 0.25)))) /
                (1 - exp(-tau));  // true width
       if (eora && (sig % 10) == 1) spe += eora * 0.5 * (tanh((1420 / frq - 1420 / feor) / (wid * 1420 / (feor * feor))) + 1.0);
@@ -173,7 +174,7 @@ int main(int argc, char *argv[]) {
         spe += adnoise * 1e-3 * gauss();
         if (frq >= fstart && frq <= fstop) wt = 1;
       }
-      if (resid)
+      if (resid) // not done for B18
         spec[i + j * NDATA] = spe - mde;
       else
         spec[i + j * NDATA] = spe;
@@ -212,6 +213,7 @@ int main(int argc, char *argv[]) {
         m = j + 1;
       else
         m = j;
+      // Not done in B18:
       if (diff < 0.0) spdiff[i] = spec[i + m * NDATA] - spec[i + j * NDATA];  // straight difference
       wtav[i] = wtt[i + j * NDATA];
     }
@@ -223,6 +225,10 @@ int main(int argc, char *argv[]) {
     limm = lim;
     if (typ[j] == 0) limm = 0;
     m = 0;
+    printf(">> tchk %f t150 %f sig %d\n", tchk, t150, sig);
+
+    // For B18: mchk = 0, schk = 0 (so they both pass). t150 is set in the fit above
+    // and is, I think actually T75 modelled.
     if (rms < limm && moon(timm[j], mchk) && sun(timm[j], schk) && t150 > tchk) {
       for (i = 0; i < nn[j]; i++) {
         sppl[i + j3 * NDATA] = spdiff[i] - specout[i];
@@ -776,9 +782,12 @@ double fition(int np, int mode, double freqq[], double data[], double wt[], doub
       if (i == 4) fitf[k] = pow(freq, -spi) * (pow(log(freq), 2.0));
       //    if(i==4)fitf[k] = 1;   //  better for high band
       if (i == 5) fitf[k] = pow(freq, -spi) * (pow(log(freq), 3.0));
+      
+      // sig = 0 for B18
       if (sig >= 10) fitf[k] = pow(freq, -2.5 + i);                              // not quite as good for updn  best for dn only
       if (sig >= 20 && sig < 30) fitf[k] = pow(freq, -spi) * pow(log(freq), i);  // new quasi physical
       if (sig >= 30) fitf[k] = pow(log(freq), i);                                // new loglog
+      // imode=0 for B18 RMS filter.
       if (imode) {
         if (i == 0) fitf[k] = pow(freq, -spi - 2.0);
         if (i == 1) fitf[k] = pow(freq, -2.0);

@@ -266,7 +266,7 @@ int main(int argc, char *argv[]) {
     lst = (gst(secs) + lon) * 12.0 / PI;
     if (lst > 24.0) lst += -24.0;
     if (lst < 0.0) lst += 24.0;
-    printf("%4d:%03d:%02d:%02d:%02d %5.2f ", yr, dy, hr, mn, sc, lst);
+    printf("%4d:%03d:%02d:%02d:%02d %5.2f %1.10e %.2f %1.10e ", yr, dy, hr, mn, sc, lst, ha, secs, gst(secs));
     j = 0;
 
     day_flag = (dy == day || day == 0);
@@ -279,6 +279,7 @@ int main(int argc, char *argv[]) {
     adc_flag=adcov < padcov;
     buf_flag=strlen(buf) > 131000;
     tstop_hr_flag=((hr >= tstart && hr <= tstop) || (tstart > tstop && (hr <= tstop || hr >= tstart)));
+    
     fprintf(timeflag_file, "%d %d %d %d %d %d %d %d %d %d ", 
       day_flag, gal_flag, gha_flag, nstart_flag, sunlim_flag, moonlim_flag, 
       delaystart_flag, adc_flag, buf_flag, tstop_hr_flag
@@ -732,21 +733,31 @@ int main(int argc, char *argv[]) {
 
   if (pfit) { // this IS done for B18 (pfit=37)
     if (fabs(rfi) > 0.0) { // rfi = 2.5 for B18
-      file1 = fopen("initial_fourier_model.txt", "w");
+      file1 = fopen("rfi_models.txt", "w");
+      FILE *file2 = fopen("rfi_flags.txt", "w");
+      FILE *file5 = fopen("rfi_windowed_avg.txt", "w");
+      FILE *file3 = fopen("rfi_rmss.txt", "w");
+      FILE *file4 = fopen("rfi_initial_weights.txt", "w");
+      FILE *file6 = fopen("rfi_residuals.txt", "w");
+      FILE *file7 = fopen("rfi_sumweights.txt", "w");
+      
 
       zwt = 1;
       zwtp = 0;
       for (i = 0; i < np; i++)
         if (wtts[i] == 0) wtt[i] = 0;
+      
       for (j = 0; j < 100 && zwt > zwtp; j++) {
         tav = polyfit(pfit, np, data, mcalc, wtt, dataout, fmode);
         rmss = rmscalc(np, dataout, wtt);
 
-        if (j == 0){
-          for(i=0;i<np;i++){
-            fprintf(file1, "%f %f\n", fstart + i * fstep, dataout[i]);
-          }
+        for(i=0;i<np;i++){
+          fprintf(file1, "%1.15e ", data[i] - dataout[i]);
+          fprintf(file6, "%1.15e ", dataout[i]);
         }
+        fprintf(file1, "\n");
+        fprintf(file6, "\n");
+
         float rmsmax = 0;
         float rmsmin = 0;
         float resmax = 0;
@@ -754,6 +765,13 @@ int main(int argc, char *argv[]) {
         float zmax = 0;
         float zmin = 0;
 
+        if (j==0){
+          for(i=0; i<np; i++){
+            fprintf(file4, "%f\n", wtt[i]);
+          }
+          fclose(file4);
+        }
+        
         for (i = 0; i < np; i++) {  // sliding rms is better
           a = 0;
           b = 1e-99;
@@ -775,7 +793,12 @@ int main(int argc, char *argv[]) {
             }
           }
           rms = sqrt(a / b);
+          fprintf(file7, "%1.15e ", b);
           b = dataout[i] / (fabs(rfi) * rms);
+          fprintf(file3, "%1.15e ", rms);
+          fprintf(file5, "%1.15e ", av);
+          
+
           if (b > 1) {
             wtt[i] = 0;
             if (nrfi && i + nrfi < np && i - nrfi >= 0)
@@ -792,6 +815,9 @@ int main(int argc, char *argv[]) {
           if(rms < rmsmin) rmsmin = rms;
           if(rms > rmsmax) rmsmax = rms;
         }
+        fprintf(file3, "\n");
+        fprintf(file5, "\n");
+        fprintf(file7, "\n");
         zwtp = zwt;
         m = 0;
         for (i = 0; i < np; i++) {
@@ -803,8 +829,20 @@ int main(int argc, char *argv[]) {
           if (fstart + i * fstep > freqstart && fstart + i * fstep < freqstop) m++;
         }
         nnp = m;
-        printf("%d rms %f zwt %d res %f %f z %f %f rms %f %f\n", j, rms, zwt, m, np, resmin, resmax, zmin, zmax, rmsmin, rmsmax);
+        printf("%d rms %f zwt %d / %d (or %d?) res %f %f z %f %f rms %f %f\n", j, rms, zwt, np, m, resmin, resmax, zmin, zmax, rmsmin, rmsmax);
+        
+        for(i=0; i<np; i++){
+          fprintf(file2, "%f ", wtt[i]);
+        }
+        fprintf(file2, "\n");
       }
+      fclose(file1);
+      fclose(file2);
+      fclose(file3);
+      fclose(file5);
+      fclose(file6);
+      fclose(file7);
+      
     }
     tav = polyfit(pfit, np, data, mcalc, wtt, dataout, fmode);
   } else {
@@ -1388,6 +1426,10 @@ void dsmooth(int np, int n, double data[], double wt[])
 */
 
 void dsmooth(int np, int n, double data[], double wt[]) {
+  FILE *smoothed_weights = fopen("smoothed_weights.txt", "w");
+  FILE *smoothed_weights_thresh = fopen("smoothed_weights_thresh.txt", "w");
+  FILE *smoothed_weights_dec = fopen("smoothed_weights_decimated.txt", "w");
+
   double a, b, c, dd, fre, w;
   int i, j, k;
   dd = 2.0 / n;
@@ -1404,17 +1446,26 @@ void dsmooth(int np, int n, double data[], double wt[]) {
         b += w * data[k];
       }
     }
-    if (a > n / 4.0)
+    fprintf(smoothed_weights, "%e\n",a);
+
+    if (a > n / 4.0){
       mcalc[i] = b / a;  // prevents smoothed freq with only a few freqs  n/4 best?
-    else {
+      fprintf(smoothed_weights_thresh, "%e\n",a);
+    } else {
       mcalc[i] = data[i];
       mcalc[i + np] = 0;
+      fprintf(smoothed_weights_thresh, "%e\n",0.0);
     }
   }
   for (i = 0; i < np; i++) {
     if (wt[i] > 0.0) data[i] = mcalc[i];
     wt[i] = mcalc[i + np];
   }
+
+  for (j = 0; j < np; j += smooth) {    
+    fprintf(smoothed_weights_dec, "%e\n", wt[j]);
+  }
+
 }
 
 double polyfit(int npoly, int nfreq, double ddata[], double mcalc[], double wtt[], double dataout[], int mode) {
