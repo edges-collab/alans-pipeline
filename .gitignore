@@ -63,3 +63,4 @@ scripts/*.txt
 bin/
 scripts/temp*
 .ipynb_checkpoints/
+*.acq

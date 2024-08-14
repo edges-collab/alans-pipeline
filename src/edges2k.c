@@ -3208,8 +3208,8 @@ void outcal(int np, double freqq[], complex double s11lna[], double sca[], doubl
 
   for (k = 0; k < np; k++) {
     fprintf(file,
-            "freq %1.16e s11lna %1.16e %1.16e sca %1.16e ofs %1.16e tlnau "
-            "%1.16e tlnac %1.16e tlnas %1.16e wtcal %1.0f %s\n",
+            "freq %10.6f s11lna %10.6f %10.6f sca %10.6f ofs %10.6f tlnau "
+            "%10.6f tlnac %10.6f tlnas %10.6f wtcal %1.0f %s\n",
             freqq[k], creal(s11lna[k]), cimag(s11lna[k]), sca[k], ofs[k], tlnau[k], tlnacc[k], tlnacs[k], wtcal[k], title);
   }
   fclose(file);

@@ -5,7 +5,7 @@
 # this fix, so to match them you must set this to zero. However, data without the fix
 # cannot be matched by edges-cal, which does not have this bug.
 set refresh_spectra = 0       # If '1' re-read and average spectra even if they already exist.
-set use_fittp_fix = 1         # Whether to use the fix to fittp() to use the lowest frequency.
+set use_fittp_fix = 0         # Whether to use the fix to fittp() to use the lowest frequency.
 set results_dir = H2Case      # The directory into which to save results. 
 
 # ======================================================================================
