@@ -137,6 +137,8 @@ int main(int argc, char *argv[]) {
   frqp = 1e99;
   j = -1;
   if (fstop < 150 && feor > 100) feor = 75;
+
+  FILE *dayfile = fopen("nightly_dates.txt", "w");
   while (fgets(buf, 32768, file3) != 0) {
     if (strstr(buf, ti)) sscanf(buf, "%*s %s", tti);
     if (strstr(buf, "freq") && !strstr(buf, "nan")) {
@@ -150,6 +152,7 @@ int main(int argc, char *argv[]) {
         info2[(j + 1) * 100] = 0;
         sscanf(buf, "%*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %s %s", &title[j * 100], &title3[j * 100]);
         if (tmode == 1) sprintf(&title3[j * 100], "%s%s", ti, tti);
+        fprintf(dayfile, "%d %d\n", yr, day);
       }
       frqp = frq;
       freq[i + j * NDATA] = frq;
@@ -187,6 +190,7 @@ int main(int argc, char *argv[]) {
     nn[j] = i;
     if (strstr(buf, ti)) sscanf(buf, "%*s %s", &info2[(j + 1) * 100]);
   }
+  fclose(dayfile);
   fclose(file3);
   nplot = j + 1;
   if (half && !alt) {
@@ -206,9 +210,17 @@ int main(int argc, char *argv[]) {
   maxrms = -1e99;
   j3 = 0;
   avrms = 0;
+  FILE *flagfile, *modelfile, *rfifile, *datafile;
+  flagfile = fopen("nightly_flagfile.txt", "w");
+  modelfile = fopen("nightly_model_file.txt", "w");
+  rfifile = fopen("nightly_rfi.txt", "w");
+  datafile = fopen("nightly_data.txt", "w");
+
+  fprintf(flagfile, "# rms rmscheck moon sun t150\n");
   for (j = 0; j < nplot; j++) {
     for (i = 0; i < nn[j]; i++) {
       spdiff[i] = spec[i + j * NDATA];
+      fprintf(datafile, "%1.12e ", spdiff[i]);
       if (j < nplot - 1)
         m = j + 1;
       else
@@ -217,18 +229,33 @@ int main(int argc, char *argv[]) {
       if (diff < 0.0) spdiff[i] = spec[i + m * NDATA] - spec[i + j * NDATA];  // straight difference
       wtav[i] = wtt[i + j * NDATA];
     }
+    fprintf(datafile, "\n");
     f150 = fition(nn[j], abs(nfit), freq, spdiff, wtav, specout, &t150, &spind, &spcurv, &ionabs, &ionemm, &speor, &cov, feor, wid, sig, 0, 0, 0);
     rms = rmscalc(nn[j], spdiff, specout, wtav);
     for (i = 0; i < nn[0]; i++)
-      if (rfi && (spdiff[i] - specout[i]) > rms * rfi) wtav[i] = 0;
+      if (rfi && (spdiff[i] - specout[i]) > rms * rfi){
+        wtav[i] = 0;
+        printf("RFI FLAG: day=%d channel=%d rms=%1.12e rms*rfi%1.12e resid=%1.12e\n", j, i, rms, rms*rfi, spdiff[i] - specout[i]);
+        fprintf(rfifile, "%d ", 0);
+      }else{
+        fprintf(rfifile, "%d ", 1);
+      }
+    fprintf(rfifile, "\n");
     if (rms > maxrms) maxrms = rms;
     limm = lim;
     if (typ[j] == 0) limm = 0;
     m = 0;
     printf(">> tchk %f t150 %f sig %d\n", tchk, t150, sig);
 
+    for(i=0;i<nn[0]; i++){
+      fprintf(modelfile, "%1.12e ", specout[i]);
+    }
+    fprintf(modelfile, "\n");
+
     // For B18: mchk = 0, schk = 0 (so they both pass). t150 is set in the fit above
     // and is, I think actually T75 modelled.
+    fprintf(flagfile, "%1.16e %d %d %d %d\n", rms, rms < limm, moon(timm[j], mchk), sun(timm[j], schk), t150>tchk);
+
     if (rms < limm && moon(timm[j], mchk) && sun(timm[j], schk) && t150 > tchk) {
       for (i = 0; i < nn[j]; i++) {
         sppl[i + j3 * NDATA] = spdiff[i] - specout[i];
@@ -254,6 +281,12 @@ int main(int argc, char *argv[]) {
     printf("t%d %8.3f rms %8.5f %s %d spind %10.3f ionabspercent %7.2f ionemmK %7.0f spcurv %10.3f cov %10.3f m %d nline %s\n", (int)f150, t150, rms,
            &title[j * 100], typ[j], spind, ionabs, ionemm, spcurv, cov, m, &title3[j * 100]);
   }
+  fclose(flagfile);
+  fclose(modelfile);
+  fclose(rfifile);
+  fclose(datafile);
+
+  FILE *weightsfile = fopen("nightly_weights.txt", "w");
   if (!j3) {
     printf("no data accepted\n");
     return 0;
@@ -266,13 +299,16 @@ int main(int argc, char *argv[]) {
       ndn++;
     }
     for (i = 0; i < nn[j]; i++) {
+      fprintf(weightsfile, "%f ", wtpl[i + j*NDATA]);
       if (typp[j] == 1) {
         dnav[i] += wtpl[i + j * NDATA] * sppl[i + j * NDATA];
         wtdn[i] += wtpl[i + j * NDATA];
         dnavm[i] += spplm[i + j * NDATA];
       }
     }
+    fprintf(weightsfile, "\n");
   }
+  fclose(weightsfile);
   for (i = 0; i < nn[0]; i++) {
     if (wtdn[i]) dnav[i] = dnav[i] / wtdn[i];
   }
@@ -301,6 +337,16 @@ int main(int argc, char *argv[]) {
       else
         wtdn[i] = 1;
     }
+
+  FILE *averagefile = fopen("pre-rfi-average.txt", "w");
+  fprintf(averagefile, "# freq data weight\n");
+  for (i=0; i<nn[0];i++){
+    fprintf(averagefile, "%1.12e %1.12e %1.12e\n", freq[i], spdiff[i], wtav[i]);
+  }
+  fclose(averagefile);
+
+  FILE *rfimodelfile = fopen("rfi-model.txt", "w");
+  fprintf(rfimodelfile, "# freq data model wt\n");
   if (rfi) {
     fition(nn[0], 7, freq, spdiff, wtav, specout, &t150, &spind, &spcurv, &ionabs, &ionemm, &speor, &cov, feor, wid, 10, 0, 0,
            tau);  // rfi filt with 7 term poly
@@ -308,6 +354,12 @@ int main(int argc, char *argv[]) {
     for (i = 0; i < nn[0]; i++)
       if ((spdiff[i] - specout[i]) > rms * rfi) wtav[i] = 0;
   }
+  printf("RMS on fit for flagging RFI: %f\n", rms);
+  for(i=0;i<nn[0];i++){
+    fprintf(rfimodelfile, "%1.12e %1.12e %1.12e %f\n", freq[i], spdiff[i], specout[i], wtav[i]);
+  }
+  fclose(rfimodelfile);
+
   if (nfit > 0)
     fition(nn[0], nfit, freq, spdiff, wtav, specout, &t150, &spind, &spcurv, &ionabs, &ionemm, &speor, &cov, feor, wid, sig, imode,
            t150dn / (ndn + 1e-6), 0);
@@ -783,7 +835,7 @@ double fition(int np, int mode, double freqq[], double data[], double wt[], doub
       //    if(i==4)fitf[k] = 1;   //  better for high band
       if (i == 5) fitf[k] = pow(freq, -spi) * (pow(log(freq), 3.0));
       
-      // sig = 0 for B18
+      // sig = 0 for B18 for pre-avg model, but sig=10 for rfi
       if (sig >= 10) fitf[k] = pow(freq, -2.5 + i);                              // not quite as good for updn  best for dn only
       if (sig >= 20 && sig < 30) fitf[k] = pow(freq, -spi) * pow(log(freq), i);  // new quasi physical
       if (sig >= 30) fitf[k] = pow(log(freq), i);                                // new loglog

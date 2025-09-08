@@ -217,13 +217,20 @@ int main(int argc, char *argv[]) {
   }
 
   fprintf(timeflag_file, 
-    "day0 gal0 gha0 nstart0 sunlim0 moonlim0 delaystart0 adc0 buf0 tstop-hr0 "
-    "day1 gal1 gha1 nstart1 sunlim1 moonlim1 delaystart1 adc1 buf1 tstop-hr1 "
-    "day2 gal2 gha2 nstart2 sunlim2 moonlim2 delaystart2 adc2 buf2 tstop-hr2 "
+    "# HA0 day0 gal0 gha0 nstart0 sunlim0 moonlim0 delaystart0 adc0 buf0 tstop-hr0 "
+    "HA1 day1 gal1 gha1 nstart1 sunlim1 moonlim1 delaystart1 adc1 buf1 tstop-hr1 "
+    "HA2 day2 gal2 gha2 nstart2 sunlim2 moonlim2 delaystart2 adc2 buf2 tstop-hr2 "
     "ppercent pkpower d150 dloadmax rmsf fmpwr\n"
   );
+  long foffset;
+  int prev_swpos = -1;
 
+  foffset = ftell(timeflag_file);
+  
   while (fgets(buf, 1000000, file1) != 0) {
+    // Record the start of each line in the timeflag file.
+    
+
     if (buf[0] == '#' && buf[2] == 's') sscanf(buf, "%*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %d %*s %*s %d %*s %d", &temp, &nblock, &nspec);  // db310
     // skip this line if it is a comment
     if (buf[0] == '*' || buf[0] == '\n' || buf[0] == '#' || buf[0] == ';') continue;
@@ -279,17 +286,21 @@ int main(int argc, char *argv[]) {
     adc_flag=adcov < padcov;
     buf_flag=strlen(buf) > 131000;
     tstop_hr_flag=((hr >= tstart && hr <= tstop) || (tstart > tstop && (hr <= tstop || hr >= tstart)));
-    
-    fprintf(timeflag_file, "%d %d %d %d %d %d %d %d %d %d ", 
-      day_flag, gal_flag, gha_flag, nstart_flag, sunlim_flag, moonlim_flag, 
+
+    // Before we start writing to the timeflag file, check if this swpos is correct.
+    if ((swpos != (prev_swpos + 1)) && !(swpos==0 && prev_swpos == 2)){
+      fseek(timeflag_file, foffset, SEEK_SET);
+    }
+    prev_swpos = swpos;
+
+    fprintf(timeflag_file, "%lf %d %d %d %d %d %d %d %d %d %d ", 
+      ha, day_flag, gal_flag, gha_flag, nstart_flag, sunlim_flag, moonlim_flag, 
       delaystart_flag, adc_flag, buf_flag, tstop_hr_flag
     );
-    
+
     if (day_flag && gal_flag && gha_flag && nstart_flag && sunlim_flag && moonlim_flag && delaystart_flag && adc_flag && buf_flag && tstop_hr_flag)
     {
       // Everything above got through fine.
-      
-
       p = buf;
       p = strstr(p, "spectrum");
       if (*p && p) p = strchr(p, ' ');
@@ -444,7 +455,8 @@ int main(int argc, char *argv[]) {
             dload < dloadmax && rrmsf < maxrmsf && fmpwr < maxfm && j == nspec)
         {
           fprintf(timeflag_file, " 1 1 1 1 1 1\n");
-
+          foffset = ftell(timeflag_file);
+  
           wttt = 1;
           if (ppercent > maxp0) maxp0 = ppercent;
           if (ppercent < minp0) minp0 = ppercent;
@@ -564,6 +576,7 @@ int main(int argc, char *argv[]) {
           if (a <= -12.0) a += 24.0;
           if (gha + a > ghamax) ghamax = gha + a;
           if (gha + a < ghamin) ghamin = gha + a;
+
           if (water && (nline % (water) == (water - 1) || peakpwr < 0)) {
             waterwrite(1, np, avdataw, yr, dy, hr, mn, sc, lst);
             waterspec(1, np, avdataw, dy, hr, mn, sc, wscalemax, wscalemin);
@@ -579,10 +592,12 @@ int main(int argc, char *argv[]) {
             rrmsf < maxrmsf,
             fmpwr < maxfm
           );
+          foffset = ftell(timeflag_file);
         }
       } // if swpos=2 and other swpos got through aux
       else if (swpos == 2) {
         fprintf(timeflag_file, "-1 -1 -1 -1 -1 -1\n");
+        foffset = ftell(timeflag_file);
       }
       avpwr = avpwr / (j + 1e-99);
       if (rrmsf < maxrmsf)
@@ -597,6 +612,7 @@ int main(int argc, char *argv[]) {
           "%5.1f rmsf%d %5.1f\n",
           line, temp, avpwrt, 100.0 * avpwr2 / avpwrt, nline, pkpwr, ppmax, adcov, swpos, wttt, tempr, fmpwr, jj, rrmsf);
       np = j;
+
     } // endif aux filters passed
     else
     {
@@ -606,12 +622,23 @@ int main(int argc, char *argv[]) {
         "%5.1f rmsf%d %5.1f",
         line, temp, avpwrt, 0, nline, pkpwr, ppmax, adcov, swpos, 0, tempr, fmpwr, jj, rrmsf
       );
-      if(swpos == 2) fprintf(timeflag_file, "-1 -1 -1 -1 -1 -1\n");
+      if(swpos == 2){
+        fprintf(timeflag_file, "-1 -1 -1 -1 -1 -1\n");
+        foffset = ftell(timeflag_file);
+      }
     }
     if (j == 0) printf("\n");
   
   } // while loop over lines in ACQ file
   fclose(file1);
+
+  // If we had a trailing swpos
+  printf("ENDED WITH swpos=%d\n", swpos);
+  if (swpos != 2){
+    fseek(timeflag_file, foffset, SEEK_SET);
+    printf("YES I AM TRUNCATING! %ld\n", foffset);
+    ftruncate(fileno(timeflag_file), foffset);
+  }
   fclose(timeflag_file);
 
   if (!np) return 0;
@@ -894,6 +921,7 @@ int main(int argc, char *argv[]) {
     if (data[i] < min) min = data[i];
   printf("max %f min %f maxp0 %6.3f minp0 %6.3f avp0 %6.3f\n", max, min, maxp0, minp0, avp0 / np0);
   toyrday(avsec / nline, &yr, &day, &hr, &mn, &sc);
+
   if (dgha != 48) {
     secs = avsec / nline;
     lst = (gst(secs) + lon) * 12.0 / PI;
@@ -902,7 +930,6 @@ int main(int argc, char *argv[]) {
     if (secs - avsec / nline > 43200) secs += -86400;
     if (secs - avsec / nline < -43200) secs += 86400;
     toyrday(secs, &yr, &day, &hr, &mn, &sc);
-    printf("ghav %f %f a %f\n", ghav / nline, (gst(secs) + lon) * 12.0 / PI - (17.0 + 45.0 / 60.0 + 40.04 / 3600.0), a);
   }
   if (nline) specout(np, data, wtt, fname, nline, yr, day, hr, mn, sc, gha, dgha, ghav / nline, ghamax, ghamin);
   return 0;

@@ -14,6 +14,7 @@
 #define NBEAM 256
 #define NFIT 50  // more than 50 may not be accurate
 
+void writespec(int, double *, double *, char *);
 void plotfspec(int, double *, double *, double *, double *, double, int, int, char *, char *, char *);
 void outfspec(int, double *, double *, double *, double *, double, int, int, char *);
 void outcal(int, double *, complex double *, double *, double *, double *, double *, double *, double *, char *);
@@ -899,6 +900,7 @@ int main(int argc, char *argv[]) {
   for (j = 0; j < ns11ant; j++)
     if (wttant[j]) kk++;
   if (nfit4 >= kk) nfit4 = kk - 1;
+  printf("NUMBER OF TERMS FOR ANTS11: %d", nfit4);
   fittp(ns11ant, freqs11ant, s11ant, wttant, nant, freqant, ss11ant, nfit4, fitf, mcalc, aarr, bbrr, 0, -1, antfname);
   if (lmode == 2) {
     fittp(ns11rig, freqs11rig, s11rig, wttrig, nant, freqant, ss11rig, nfit2, fitf, mcalc, aarr, bbrr, 7, -1, rigfname);
@@ -923,15 +925,38 @@ int main(int argc, char *argv[]) {
   fprintf(lossfile, "# freq, loss, tloss [(1 - loss)*Tant]\n");
   fprintf(beamcorrfile, "# freq, skymodel, refskymodel, beamcorr\n");
 
-  printf("WTANT JUST BEFORE LOSS/BEAM: %e\n", wtant[0]);
+  printf("TAMB AND TLOAD: %f %f\n", tamb, tload);
+  writespec(nant, freqant, spant, "spectra_before_noise_waves.txt");
 
+  // write out the specal coefficients to be sure exactly what they are after re-modelling.
+  FILE *remdl_file = fopen("remodelled_specal.txt", "w");
+  fprintf(remdl_file, "# freq s11ant_rl s11ant_im s11lna_rl s11lna_im C1 C2 Tunc Tcos Tsin\n");
+
+  for (i= 0; i < nant; i++){
+    fprintf(
+        remdl_file, 
+        "%1.12e %1.12e %1.12e %1.12e %1.12e %1.12e %1.12e %1.12e %1.12e %1.12e\n",
+        freqant[i], creal(ss11ant[i]), cimag(ss11ant[i]),
+        creal(ss11lna[i]), cimag(ss11lna[i]),
+        tcal_scasm[i], tcal_ofssm[i], tlna0[i], tlna1[i], tlna2[i]
+      );
+  }
+  fclose(remdl_file);
+
+  FILE *after_nw_file = fopen("spectra_after_noise_waves.txt", "w");
+  FILE *after_loss = fopen("spectra_after_loss.txt", "w");
+  FILE *after_beam = fopen("spectra_after_beam.txt", "w");
+  fprintf(after_nw_file, "# freq spec wt\n");
+  fprintf(after_loss, "# freq spec wt\n");
+  fprintf(after_beam, "# freq spec wt\n");
+  
   for (i = 0; i < nant; i++) {
     sspant[i] = (spant[i] - tamb) * tcal_scasm[i] + tamb - tcal_ofssm[i];
     //   if(freqant[i] < wfstart || freqant[i] > wfstop || wtcal[i] == 0)
     //   wtant[i] = 0;
     if (freqant[i] < wfstart || freqant[i] > wfstop) wtant[i] = 0;
     dataout[i] = w3pinv(ss11ant[i], ss11lna[i], sspant[i], tload, tamb, tlna0[i], tlna1[i], tlna2[i]);
-
+    if (i%50==0)    printf("freq=%lf dataout=%lf\n", freqant[i], dataout[i]);
     if (lmode < 0)
       La = loss(ss11ant[i],
                 atten + aloss * sqrt(freqant[i] / 100.0));  // aloss > 0 for simple atten or cross-check
@@ -945,14 +970,14 @@ int main(int argc, char *argv[]) {
                                                                 lmode);  // lmode 0=hot load 1=balun+bend 5or6=balun+bend
                                                                          // lowband
     }
-    if (wtant[i] && (La < 0.1 || La > 1.0)) printf("check loss freq %f La %f\n", freqant[i], La);
-
     ltemp[i] = (1.0 - La) * tant;
 
     fprintf(lossfile, "%f %e %e\n", freqant[i], La, ltemp[i]);
+    fprintf(after_nw_file, "%1.12e %1.12e %f\n", freqant[i], dataout[i], wtant[i]);
 
     dataout[i] = lossinv(dataout[i], tant, La);
-
+    fprintf(after_loss, "%1.12e %1.12e %f\n", freqant[i], dataout[i], wtant[i]);
+    
     if (!(i % (nant / 10)))
       printf(
           "freqant %7.2f tlnau %7.2f tlnacc %7.2f tlnacs %7.2f tlnac %7.2f "
@@ -986,10 +1011,9 @@ int main(int argc, char *argv[]) {
       }
 
       dataout[i] = dataout[i] * refsky / skymodel[i];
-
-      fprintf(beamcorrfile, "%f %e %e %e\n", freqant[i], skymodel[i], refsky, refsky / skymodel[i]);
+      fprintf(beamcorrfile, "%f %1.16e %1.16e %1.16e %f\n", freqant[i], skymodel[i], refsky, refsky / skymodel[i], wtant[i]);
     }
-
+    fprintf(after_beam, "%1.12e %1.12e %f\n", freqant[i], dataout[i], wtant[i]);
     if (test & 1 && (skymode >= 0 || skymod2 >= 0) && (skymode >= 256 || skymod2 >= 256)) dataout[i] = skymodel[i];  // substitute  beamcorrection
     if (test == 2) dataout[i] = 300 * pow(freqant[i] / 150.0,
                                           specin);  // test rms 14 mK at 2.55 1 mK at 2.51
@@ -1016,6 +1040,8 @@ int main(int argc, char *argv[]) {
   }
   fclose(lossfile);
   fclose(beamcorrfile);
+  fclose(after_loss);
+  fclose(after_nw_file);
 
   if (sim) {
     for (i = 0; i < nant; i++) {
@@ -1182,7 +1208,7 @@ int main(int argc, char *argv[]) {
     smoothinputfile = fopen("second_smooth_input.txt", "w");
     fprintf(smoothinputfile, "# freq, data, model, wt\n");
     for (i=0; i < nant; i++){
-      fprintf(smoothinputfile, "%f %e %e %e\n",
+      fprintf(smoothinputfile, "%1.12e %1.12e %1.12e %e\n",
         freqant[i], 
         dataout[i], dataout2[i], wtant[i]
       );
@@ -2358,9 +2384,10 @@ double beamcorr(double freq, int bfit, double ang, double secs, double mcalc[], 
 
       sprintf(name, "beamfac%d.txt",n);
       file3 = fopen(name, "w");
-      fprintf(file3, "frq bwfg bm bwfg_ref\n");
+      fprintf(file3, "# bwfg bm bwfg_ref\n");
+      fprintf(file3, "# LST = %1.6e\n", *lst);
       for(frq=0;frq<nbeam;frq++){
-        fprintf(file3, "%f %f %f\n", fsum[frq], fsum1[frq], fsum2[frq]);
+        fprintf(file3, "%1.16e %1.16e %1.16e\n", fsum[frq], fsum1[frq], fsum2[frq]);
       }
       fclose(file3);
     }
@@ -3188,6 +3215,24 @@ void outfspec(int np, double freqq[], double data[], double skymodel[], double s
     if (mode == 0) {
       fprintf(file, "freq %12.6f tantenna %12.6f K skymodel %12.6f K wt %1.0f %s %5d\n", freqq[k], data[k], skymodel[k], sunn[k], title, nline);
     }
+  }
+  fclose(file);
+}
+
+void writespec(int np, double freqq[], double data[], char *fname)
+// writeout calibrated spectrum
+{
+  int k;
+  FILE *file;
+
+  if ((file = fopen(fname, "w")) == NULL) {
+    printf("cannot open %s:\n", fname);
+    return;
+  }
+
+  fprintf(file, "# freq spec\n");
+  for (k = 0; k < np; k++) {
+    fprintf(file, "%1.12e %1.12e\n", freqq[k], data[k]);
   }
   fclose(file);
 }
