@@ -767,15 +767,26 @@ int main(int argc, char *argv[]) {
       FILE *file4 = fopen("rfi_initial_weights.txt", "w");
       FILE *file6 = fopen("rfi_residuals.txt", "w");
       FILE *file7 = fopen("rfi_sumweights.txt", "w");
+      FILE *file8 = fopen("rfi_basisfuncs.txt", "w");
       
 
       zwt = 1;
       zwtp = 0;
       for (i = 0; i < np; i++)
         if (wtts[i] == 0) wtt[i] = 0;
-      
+
+      printf("fstart %f freqstop %f np %d\n", fstart, freqstop, np);
       for (j = 0; j < 100 && zwt > zwtp; j++) {
         tav = polyfit(pfit, np, data, mcalc, wtt, dataout, fmode);
+        
+        if(j==0){
+          for(i=0;i<np;i++){
+            for(k=0;k<pfit;k++){
+              fprintf(file8, "%1.18e ", mcalc[i*pfit + k]);
+            }
+            fprintf(file8, "\n");
+          }
+        }
         rmss = rmscalc(np, dataout, wtt);
 
         for(i=0;i<np;i++){
@@ -869,6 +880,7 @@ int main(int argc, char *argv[]) {
       fclose(file5);
       fclose(file6);
       fclose(file7);
+      fclose(file8);
       
     }
     tav = polyfit(pfit, np, data, mcalc, wtt, dataout, fmode);

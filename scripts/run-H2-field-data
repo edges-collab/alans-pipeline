@@ -33,7 +33,16 @@ if ( $MASTER_MATCH_B18 == 1 ) then
     set use_fittp_fix = 0   # set to zero to not use the fix (to obtain original)
 endif
 
-if ( do_beam_correction == 0 ) set results = "${results}NoBeam"
+if ( $do_beam_correction == 0 ) set results = "${results}NoBeam"
+
+echo "Working in $results, with options"
+echo "  calfile: $calfile"
+echo "  first_day_read: $first_day_read"
+echo "  last_day: $last_day"
+echo "  do_beam_correction: $do_beam_correction"
+echo "  refresh_spectra: $refresh_spectra"
+echo "  refresh_calspec: $refresh_calspec"
+echo "  use_fittp_fix: $use_fittp_fix"
 
 
 # ======================================================================================
@@ -150,5 +159,9 @@ set avgopts = "$avgopts -rfi 1.9 -g10  -date -seor -1 -tau 7 -sig 0 -md 1 -out 3
 $bindir/longav spesum2.txt $avgopts
 set datestr=`date +"%Y-%m-%d_%H-%M"`
 mv spesum2.txt $results/spesum2_${datestr}.txt
+
+echo "Moving final average to $results/final_average_${datestr}.txt and $results/final_average_latest.txt"
+
 cp spe0.txt $results/final_average_${datestr}.txt
 mv spe0.txt $results/final_average_latest.txt
+# Don't remove the last line, it's necessary for some reason...

@@ -59,7 +59,8 @@ int main(int argc, char *argv[]) {
       schk, test;
   double snr, adnoise, gha, t150dn, diff, avrms, tau, fsmax, fsmin;
   int i, j, m, yr, day, hr, min, sc, nplot, j3, nfit, nn[NSPEC], nnpl[NSPEC], out, wtmode, sig, ndn, g10, alt, half, sim, imode, tmode, pmode, rr,
-      resid, sm, md;
+      resid, sm, md, do_round_3_rfi;
+
   dmax = 10;
   lim = 1e6;
   fstart = 0;
@@ -80,6 +81,7 @@ int main(int argc, char *argv[]) {
   tau = 0;
   sm = 0;
   md = 0;
+  do_round_3_rfi = 0;  // SGM - not done for B18, but was done by default in this script, so added flag OFF by default.
   fsmax = 200;
   fsmin = 40;
   sprintf(ti, "GHA");
@@ -112,6 +114,7 @@ int main(int argc, char *argv[]) {
     if (strstr(buf, "-schk")) { sscanf(argv[m + 1], "%lf", &schk); }
     if (strstr(buf, "-g10")) g10 = 10;
     if (strstr(buf, "-gg100")) g10 = 100;
+    if (strstr(buf, "-do-round-3-rfi")) do_round_3_rfi = 1;
     if (strstr(buf, "-diff")) { sscanf(argv[m + 1], "%lf", &diff); }
     if (strstr(buf, "-rr")) { sscanf(argv[m + 1], "%d", &rr); }
     if (strstr(buf, "-alt")) alt = 1;
@@ -347,7 +350,7 @@ int main(int argc, char *argv[]) {
 
   FILE *rfimodelfile = fopen("rfi-model.txt", "w");
   fprintf(rfimodelfile, "# freq data model wt\n");
-  if (rfi) {
+  if (rfi && do_round_3_rfi) {
     fition(nn[0], 7, freq, spdiff, wtav, specout, &t150, &spind, &spcurv, &ionabs, &ionemm, &speor, &cov, feor, wid, 10, 0, 0,
            tau);  // rfi filt with 7 term poly
     rms = rmscalc(nn[0], spdiff, specout, wtav);
