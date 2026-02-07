@@ -68,3 +68,7 @@ bin/
 scripts/temp*
 .ipynb_checkpoints/
 *.acq
+scripts/H2CaseFieldData*
+
+# Settings files
+.vscode/
