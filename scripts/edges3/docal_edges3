@@ -1,0 +1,151 @@
+#!/bin/csh -f
+
+# This file was copied from `docal_316test` on 31/01/2025 in order to run the same
+# calibration, but where we can switch the number of cterms and wterms more easily 
+# and also save out the calibrated load spectra for comparison with python code. All
+# settings should otherwise be the same as the default run.
+
+# Changeable parameters for this test.
+# if ($#argv < 2) then
+#     echo "Error: Missing input arguments. Usage: script.csh <cterms> <wterms>"
+#     exit 1
+# endif
+
+
+# set cterms = $1
+# set wterms = $2
+
+set cterms = 6
+set wterms = 5
+set nonomatch
+
+# Options for re-running sub-parts of the calculation
+set REMAKE_S11 = 1
+set REMAKE_SPECTRA = 1
+set REMAKE_CAL = 1
+
+set fstart = 50
+set fstop =  190
+set wfstart = 50
+set wfstop = 190
+
+# Don't change these.
+set use_fittp_fix = 1    # Whether to use the fix to fittp() to use the lowest frequency.
+set use_pifix = 1       # Whether to set PI to higher accuracy
+
+# These options are things we've changed from the original just for checking purposes.
+# CHANGE THEM BACK BEFORE CHECKING FURTHER THINGS.
+set SMOOTH1 = 8  # should be 8
+set SMOOTH2 = 8  # should be 8
+
+# Locations of important stuff
+set PIPELINEDIR = `cd ../.. && pwd`
+set BINDIR = $PIPELINEDIR/src
+set DATADIR = /data5/edges/data/EDGES3_data/MRO/
+
+# Preflight checks: disable stages when required inputs/tools are unavailable.
+if (! -x $BINDIR/reads1p1) then
+   echo "Warning: $BINDIR/reads1p1 not found or not executable; disabling REMAKE_S11."
+   set REMAKE_S11 = 0
+endif
+if (! -x $BINDIR/corrcsv) then
+   echo "Warning: $BINDIR/corrcsv not found or not executable; disabling REMAKE_S11."
+   set REMAKE_S11 = 0
+endif
+if (! -x $BINDIR/acqplot7amoon) then
+   echo "Warning: $BINDIR/acqplot7amoon not found or not executable; disabling REMAKE_SPECTRA."
+   set REMAKE_SPECTRA = 0
+endif
+if (! -x $BINDIR/edges3) then
+   echo "Warning: $BINDIR/edges3 not found or not executable; disabling REMAKE_CAL."
+   set REMAKE_CAL = 0
+endif
+
+
+# Save outputs under alans-pipeline/edges3-cal-outputs.
+set resultsdir = $PIPELINEDIR/edges3-cal-outputs
+mkdir -p $resultsdir
+
+if ($REMAKE_S11) then
+set d = $DATADIR/2023_210_03
+cat $DATADIR/2023_210_07_hot.tmp  # 393.22
+set ps = 33
+set rs = 49.8 # 49.962 30 49.932 35
+
+echo "==========================="
+echo "  Starting reads1p1...  "
+echo "==========================="
+
+foreach s (ant amb hot open short)
+$BINDIR/reads1p1 -res $rs -Tfopen $d\_O.s1p -Tfshort $d\_S.s1p -Tfload $d\_L.s1p -Tfant $d\_$s.s1p -loadps $ps -openps $ps -shortps $ps
+if (-e s11.csv) mv s11.csv s11$s.csv
+end
+$BINDIR/reads1p1 -res 49.8 -Tfopen $d\_lna\_O.s1p -Tfshort $d\_lna\_S.s1p -Tfload $d\_lna\_L.s1p -Tfant $d\_lna.s1p -loadps $ps -openps $ps -shortps $ps
+$BINDIR/corrcsv s11.csv -cablen 4.26 -cabdiel -1.24 -cabloss -91.5  # cablen 4.26 diel -1.24 loss -91.5
+if (-e c_s11.csv) mv c_s11.csv s11lna.csv
+endif
+
+echo "==========================="
+echo "  Starting read spectra (acqplot7amoon)...  "
+echo "==========================="
+
+
+if ($REMAKE_SPECTRA) then
+foreach s (amb hot open short)
+if (-e temp.acq) rm temp.acq
+cat $DATADIR/mro/$s/2023/2023_210*$s.acq >>! temp.acq  
+$BINDIR/acqplot7amoon temp.acq -fstart $fstart -fstop $fstop -pfit 27 -smooth $SMOOTH1 -rfi 0 -peakpwr 10 -minpwr 1 -pkpwrm 40 -maxrmsf 400 -maxfm 200
+if (-e spe.txt) mv spe.txt sp$s.txt
+if (-e flagfile.txt) mv flagfile.txt flagfile-$s.txt
+end
+endif
+
+# Set the correct edges3 binary.
+
+set edges3bin = $BINDIR/edges3
+
+#if ($use_fittp_fix) then
+#   if ($use_pifix) then
+#      set edges3bin = $BINDIR/edges3_fittpfix_pifix
+#   else
+#      set edges3bin = $BINDIR/edges3_fittpfix
+#   endif
+#else
+#   if ($use_pifix) then
+#      set edges3bin = $BINDIR/edges3_pifix
+#   else
+#      set edges3bin = $BINDIR/edges3
+#   endif
+#endif
+
+echo "==========================="
+echo "  Starting calibration (edges3.c)... for cterms "${cterms}" and wterms "${wterms}
+echo "==========================="
+
+if ($REMAKE_CAL) then
+# Lh -1 for 4" hot load cable lmode -1 for no loss to spant  
+$edges3bin -fstart $fstart -fstop $fstop \
+   -spant spopen.txt -spcold spamb.txt -sphot sphot.txt -spopen spopen.txt  -spshort spshort.txt \
+   -s11ant s11open.csv -s11hot s11hot.csv -s11cold s11amb.csv -s11lna s11lna.csv -s11open s11open.csv -s11short s11short.csv \
+   -Lh -1 -mfit -1 -smooth -$SMOOTH2 -wfstart $wfstart -wfstop $wfstop -eorcen 0 -eorwid 0 \
+   -tcold 306.5 -thot 393.22 \
+   -wtmode 0 -lmode -1 \
+   -tant 306.5 -tcab 306.5 \
+   -cfit $cterms -wfit $wterms -nfit3 10 -ldb 0.0 -adb 0.0 -delaylna 0e-12 -nfit4 27 
+endif
+
+# Move all the useful files to results.
+if (-e specal.txt) /bin/mv -f specal.txt $resultsdir/
+if (-e s11_modelled.txt) /bin/mv -f s11_modelled.txt $resultsdir/
+foreach f (s11*.csv)
+   if (-e $f) /bin/mv -f $f $resultsdir/
+end
+foreach f (calibrated_*.txt)
+   if (-e $f) /bin/mv -f $f $resultsdir/
+end
+
+# Clean up run artifacts from current directory.
+if (-e temp.acq) /bin/rm -f temp.acq
+foreach f (sp*.txt *.txt *.pos *.acq)
+   if (-e $f) /bin/rm -f $f
+end
