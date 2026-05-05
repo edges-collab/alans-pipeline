@@ -52,8 +52,8 @@ if (! -x $BINDIR/corrcsv) then
    echo "Warning: $BINDIR/corrcsv not found or not executable; disabling REMAKE_S11."
    set REMAKE_S11 = 0
 endif
-if (! -x $BINDIR/acqplot7amoon) then
-   echo "Warning: $BINDIR/acqplot7amoon not found or not executable; disabling REMAKE_SPECTRA."
+if (! -x $BINDIR/acqplot7amoon_e3) then
+   echo "Warning: $BINDIR/acqplot7amoon_e3 not found or not executable; disabling REMAKE_SPECTRA."
    set REMAKE_SPECTRA = 0
 endif
 if (! -x $BINDIR/edges3) then
@@ -86,7 +86,7 @@ if (-e c_s11.csv) mv c_s11.csv s11lna.csv
 endif
 
 echo "==========================="
-echo "  Starting read spectra (acqplot7amoon)...  "
+echo "  Starting read spectra (acqplot7amoon_e3)...  "
 echo "==========================="
 
 
@@ -94,7 +94,7 @@ if ($REMAKE_SPECTRA) then
 foreach s (amb hot open short)
 if (-e temp.acq) rm temp.acq
 cat $DATADIR/mro/$s/2023/2023_210*$s.acq >>! temp.acq  
-$BINDIR/acqplot7amoon temp.acq -fstart $fstart -fstop $fstop -pfit 27 -smooth $SMOOTH1 -rfi 0 -peakpwr 10 -minpwr 1 -pkpwrm 40 -maxrmsf 400 -maxfm 200
+$BINDIR/acqplot7amoon_e3 temp.acq -fstart $fstart -fstop $fstop -pfit 27 -smooth $SMOOTH1 -rfi 0 -peakpwr 10 -minpwr 1 -pkpwrm 40 -maxrmsf 400 -maxfm 200
 if (-e spe.txt) mv spe.txt sp$s.txt
 if (-e flagfile.txt) mv flagfile.txt flagfile-$s.txt
 end
