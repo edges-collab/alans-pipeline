@@ -185,7 +185,7 @@ int main(int argc, char *argv[])
     if (strstr(buf, "-noise")) {sscanf(argv[i+1], "%lf",&noise);} // add noise 
     if (strstr(buf, "-rr")) {sscanf(argv[i+1], "%d",&rr); if(rr) srand(rr); } // srand 
     if (strstr(buf, "-site")) {sscanf(argv[i+1], "%d",&site);} // 0 = MRO 1 = Oregon 
-    
+        
     if (mode) {
        sscanf(argv[i+1], "%s", fname);
        if ((file1 = fopen(fname, "r")) == NULL) {
@@ -418,8 +418,6 @@ int main(int argc, char *argv[])
             if(wtshort[i] == 0 || wthot[i] == 0 || wtamb[i] == 0 || freqamb[i] < 50.0 || freqamb[i] > 100.0) wtcal[namb+i] = 0; else wtcal[namb+i] = 1;
             }
           
-          if(wtcal[i]==0 || wtcal[namb+i]==0) printf("HEY I GOT A ZERO WEIGHT!!!\n");
-
           if(!(i%(nopen/10)) && iter>=nter-1) 
               printf("iter %d freq %7.2f sca %7.2f s1 %7.2f s %7.2f s2 %7.2f tcold %7.2f thot %7.2f ofs %5.2f sca %5.2f tcal_ofs %5.2f tcal_sca %5.2f tlnau %5.2f\n", 
                 iter,freqhot[i],sca,s1,s,s2,tcold,thot,ofs,sca,tcal_ofs[i],tcal_sca[i],tlna0[i]);
