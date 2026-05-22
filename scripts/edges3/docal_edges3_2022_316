@@ -10,10 +10,10 @@ set -euo pipefail
 PIPELINEDIR="$(cd ../.. && pwd)"
 BINDIR="${PIPELINEDIR}/bin"
 
-OUTDIR="$PIPELINEDIR/results/edges3-2023-210"
+OUTDIR="$PIPELINEDIR/results/edges3-2022-316"
 
 DATADIR="/data5/edges/data/EDGES3_data/MRO"
-S11DATE="2023_210_03"
+S11DATE="2022_319_14"
 
 READS1P1="${BINDIR}/reads1p1"
 CORRCSV="${BINDIR}/corrcsv"
@@ -88,7 +88,7 @@ for load in amb hot open short; do
 
   # Match the file collection scheme from `docal_edges3`.
   # EDGES-3 ACQs live under: ${DATADIR}/mro/<load>/2023/2023_210*<load>.acq
-  cat "${DATADIR}/mro/${load}/2023/2023_210"*"${load}.acq" > temp.acq
+  cat "${DATADIR}/mro/${load}/2022/2022_316"*"${load}.acq" > temp.acq
 
   "${ACQPLOT}" temp.acq \
     -fstart "${fstart}" \
@@ -116,17 +116,17 @@ done
 
 wfstart="50"
 wfstop="190"
-tcold="300.87"
-thot="395.19"
-tcab="298.96"
+tcold="306.5"
+thot="393.22"
+tcab="306.5"
 cterms="7"
 wterms="7"
 nfit3="10"
 nfit2="27"
 
 "${EDGES3BIN}" \
-  -fstart "${fstart}" \
-  -fstop "${fstop}" \
+  -fstart 50 \
+  -fstop 190 \
   -spant spopen.txt \
   -spcold spamb.txt \
   -sphot sphot.txt \

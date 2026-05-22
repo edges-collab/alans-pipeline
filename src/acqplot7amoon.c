@@ -8,6 +8,7 @@
 #include <string.h>
 #include <sys/io.h>
 #include <time.h>
+#include <unistd.h>
 #define PI 3.1415926536
 #define TWOPI 6.28318530717958
 #define NFIT 200
@@ -79,6 +80,14 @@ int main(int argc, char *argv[]) {
   short day_flag, gal_flag, gha_flag, nstart_flag, sunlim_flag, moonlim_flag, delaystart_flag, 
       adc_flag, buf_flag, tstop_hr_flag, ppercent_flag, pkpower_flag, d150_flag, 
       dloadmax_flag, rmsf_flag, fmpwr_flag;
+  /* Keep legacy CLI flags declared even if unused in current flow. */
+  ppercent_flag = pkpower_flag = d150_flag = dloadmax_flag = rmsf_flag = fmpwr_flag = 0;
+  (void)ppercent_flag;
+  (void)pkpower_flag;
+  (void)d150_flag;
+  (void)dloadmax_flag;
+  (void)rmsf_flag;
+  (void)fmpwr_flag;
   b64init(b64);
   rmsinit(ffun);
   fstart = f = 0.0;
@@ -637,7 +646,9 @@ int main(int argc, char *argv[]) {
   if (swpos != 2){
     fseek(timeflag_file, foffset, SEEK_SET);
     printf("YES I AM TRUNCATING! %ld\n", foffset);
-    ftruncate(fileno(timeflag_file), foffset);
+    if (ftruncate(fileno(timeflag_file), foffset) != 0) {
+      perror("ftruncate");
+    }
   }
   fclose(timeflag_file);
 
@@ -1175,7 +1186,7 @@ void waterspec(int mode, int np, double data[], int dy, int hr, int mn, int sc, 
   }
   if (mode == 2) {
     fprintf(filew, "0 0 0 sethsbcolor\n");
-    sprintf(txt, "file: %s", fname);
+    snprintf(txt, sizeof(txt), "file: %.248s", fname);
     fprintf(filew, "%6.2f %6.2f moveto\n (%s) show\n", 350.0 + xoffset, 50.0, txt);
     sprintf(txt, "UT %02d to %02d", tstart, tstop);
     fprintf(filew, "%6.2f %6.2f moveto\n (%s) show\n", 80.0 + xoffset, 50.0, txt);
@@ -1387,7 +1398,7 @@ void plotfspec(int np, double fstart, double data[], double wtt[], int water)
   }
   sprintf(txt, "freq(MHZ)");
   fprintf(file, "%6.2f %6.2f moveto\n (%s) show\n", xoffset + 180.0, 65.0, txt);
-  sprintf(txt, "file: %s", fname);
+  snprintf(txt, sizeof(txt), "file: %.248s", fname);
   fprintf(file, "%6.2f %6.2f moveto\n (%s) show\n", 350.0 + xoffset, 65.0, txt);
   sprintf(txt, "UT %02d to %02d", tstart, tstop);
   fprintf(file, "%6.2f %6.2f moveto\n (%s) show\n", 80.0 + xoffset, 65.0, txt);
