@@ -3,8 +3,8 @@
 This repository contains Alan's full C-pipeline for producing
 averaged, calibrated spectra.
 
-The repository is maintained primarily by @steven-murray
-and @nmahesh1412, not by Alan himself, so it is not necessarily
+The repository is maintained primarily by @steven-murray, @nmahesh1412 
+and @akvydula, not by Alan himself, so it is not necessarily
 "up-to-date" with whatever Alan is running *right now*.
 It is rather a place where we can easily tag specific versions
 that correspond to particular outputs/memos/papers in order
@@ -24,6 +24,7 @@ There is;
 * `acqplot7amoon.c`: for reading and averaging spectra.
 * `edges2k.c`: for computing lab-calibration solutions, and applying them to spectra
 * `longav.c`: for combining multiple days of data and averaging them.
+* `edges3.c`: similar to `edges2k.c` but for EDGES-3
 
 The `data/` directory contains some input data products required for
 particular scripts. Eg., a beam model, an antenna S11 model, and a
@@ -46,6 +47,8 @@ of the repo comes with scripts that are able to exactly reproduce
 the H2 case. These scripts need to be run on the ASU `enterprise` machine,
 because they access large data stored there (which we are *not* going to keep
 in the repo).
+
+For EDGES-3, these are located in `scripts/edges3/`
 
 ## Installation
 
@@ -72,3 +75,4 @@ Following this, run
     $ ./run-H2-field-data
 
 which will do the data averaging and calibration.
+

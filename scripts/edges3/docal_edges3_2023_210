@@ -1,0 +1,177 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Reproduce Alan-mode C-code outputs for EDGES-3 2023_210.
+#
+# This script assumes it's invoked from the directory it lives in
+# (alans-pipeline/scripts/edges3). The output files are written to
+# edges-analysis/tests/data/alanmode/edges3-2023-210-alan.
+
+PIPELINEDIR="$(cd ../.. && pwd)"
+BINDIR="${PIPELINEDIR}/bin"
+
+OUTDIR="$PIPELINEDIR/results/edges3-2023-210"
+
+DATADIR="/data5/edges/data/EDGES3_data/MRO"
+S11DATE="2023_210_03"
+
+READS1P1="${BINDIR}/reads1p1"
+CORRCSV="${BINDIR}/corrcsv"
+ACQPLOT="${BINDIR}/acqplot7amoon"
+EDGES3BIN="${BINDIR}/edges3_fittpfix"
+
+for exe in "${READS1P1}" "${CORRCSV}" "${ACQPLOT}" "${EDGES3BIN}"; do
+  if [[ ! -x "${exe}" ]]; then
+    echo "Error: required executable not found or not executable: ${exe}" >&2
+    exit 1
+  fi
+done
+if [[ ! -d "${DATADIR}" ]]; then
+  echo "Error: required data directory not found: ${DATADIR}" >&2
+  exit 1
+fi
+
+workdir="$(mktemp -d -t edges3_2023_210_XXXXXXX)"
+cleanup() {
+  rm -rf "${workdir}"
+}
+trap cleanup EXIT
+
+mkdir -p "${OUTDIR}"
+
+cd "${workdir}"
+
+echo "==> Working directory: ${workdir}"
+echo "==> Output directory:  ${OUTDIR}"
+
+###########################################################################
+# Step 1: Generate S11 CSVs (reads1p1), then receiver cable correction (corrcsv)
+###########################################################################
+
+d="${DATADIR}/${S11DATE}"
+ps="33"
+rs="49.8"
+
+for s in ant amb hot open short; do
+  "${READS1P1}" \
+    -res "${rs}" \
+    -Tfopen  "${d}_O.s1p" \
+    -Tfshort "${d}_S.s1p" \
+    -Tfload  "${d}_L.s1p" \
+    -Tfant   "${d}_${s}.s1p" \
+    -loadps "${ps}" -openps "${ps}" -shortps "${ps}"
+
+  mv -f s11.csv "s11${s}.csv"
+done
+
+"${READS1P1}" \
+  -res "${rs}" \
+  -Tfopen  "${d}_lna_O.s1p" \
+  -Tfshort "${d}_lna_S.s1p" \
+  -Tfload  "${d}_lna_L.s1p" \
+  -Tfant   "${d}_lna.s1p" \
+  -loadps "${ps}" -openps "${ps}" -shortps "${ps}"
+
+"${CORRCSV}" s11.csv -cablen 4.26 -cabdiel -1.24 -cabloss -91.5
+mv -f c_s11.csv s11lna.csv
+
+###########################################################################
+# Step 2: Average spectra per load (acqplot7amoon_e3) by concatenating all ACQs
+###########################################################################
+
+fstart="48"
+fstop="198"
+smooth1="8"
+
+for load in amb hot open short; do
+  rm -f temp.acq
+
+  # Match the file collection scheme from `docal_edges3`.
+  # EDGES-3 ACQs live under: ${DATADIR}/mro/<load>/2023/2023_210*<load>.acq
+  cat "${DATADIR}/mro/${load}/2023/2023_210"*"${load}.acq" > temp.acq
+
+  "${ACQPLOT}" temp.acq \
+    -fstart "${fstart}" \
+    -fstop "${fstop}" \
+    -tload 300 \
+    -tcal 1000 \
+    -pfit 27 \
+    -smooth "${smooth1}" \
+    -rfi 0 \
+    -peakpwr 10 \
+    -minpwr 1 \
+    -pkpwrm 40 \
+    -maxrmsf 400 \
+    -maxfm 200
+
+  mv -f spe.txt "sp${load}.txt"
+  if [[ -f flagfile.txt ]]; then
+    mv -f flagfile.txt "flagfile-${load}.txt"
+  fi
+done
+
+###########################################################################
+# Step 3: Calibration (edges3_fittpfix)
+###########################################################################
+
+wfstart="50"
+wfstop="190"
+tcold="300.87"
+thot="395.19"
+tcab="298.96"
+cterms="7"
+wterms="7"
+nfit3="10"
+nfit2="27"
+
+"${EDGES3BIN}" \
+  -fstart "${fstart}" \
+  -fstop "${fstop}" \
+  -spant spopen.txt \
+  -spcold spamb.txt \
+  -sphot sphot.txt \
+  -spopen spopen.txt \
+  -spshort spshort.txt \
+  -s11ant s11open.csv \
+  -s11hot s11hot.csv \
+  -s11cold s11amb.csv \
+  -s11lna s11lna.csv \
+  -s11open s11open.csv \
+  -s11short s11short.csv \
+  -Lh -1 \
+  -mfit -1 \
+  -smooth -8 \
+  -wfstart "${wfstart}" \
+  -wfstop "${wfstop}" \
+  -eorcen 0 \
+  -eorwid 0 \
+  -tcold "${tcold}" \
+  -thot "${thot}" \
+  -wtmode 0 \
+  -lmode -1 \
+  -tant "${tcold}" \
+  -tcab "${tcab}" \
+  -cfit "${cterms}" \
+  -wfit "${wterms}" \
+  -nfit3 "${nfit3}" \
+  -ldb 0.0 \
+  -adb 0.0 \
+  -delaylna 0e-12 \
+  -nfit2 "${nfit2}"
+
+###########################################################################
+# Step 4: Save run outputs to edges-analysis test-data folder
+###########################################################################
+
+rm -rf "${OUTDIR}"
+mkdir -p "${OUTDIR}"
+
+shopt -s nullglob
+for fl in sp*.txt s11*.csv s11_modelled.txt specal.txt calibrated_*.txt; do
+  if [[ -f "${fl}" ]]; then
+    cp -f "${fl}" "${OUTDIR}/"
+  fi
+done
+
+echo "==> Done. Wrote outputs to: ${OUTDIR}"
+
